@@ -3,6 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Winner's Spotlight by P.A.S.A. — Every time your horse wins, your business gets a 2-minute live broadcast on GallopTV and Tellytrack. 5 founding slots. Zero cost.">
+<meta name="keywords" content="horse racing, South Africa, GallopTV, Tellytrack, business sponsorship, KZN racing, Greyville, Scottsville, PASA">
+<meta property="og:title" content="Winner's Spotlight — P.A.S.A. | Punters Association of South Africa">
+<meta property="og:description" content="Every time your horse wins, your business gets a 2-minute live national TV spotlight. 5 founding slots. Zero cost.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sai10pasa.github.io/pasa-winners-spotlight/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Winner's Spotlight — P.A.S.A.">
+<meta name="twitter:description" content="Turn your horse's win into a 2-min live national TV spotlight. 5 founding slots. Free.">
+<link rel="canonical" href="https://sai10pasa.github.io/pasa-winners-spotlight/">
 <title>Winner's Spotlight — P.A.S.A. | Punters Association of South Africa</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
@@ -20,12 +30,11 @@
     --white-d:  #8A8578;
     --white-dd: #4A4840;
     --red:      #A83232;
+    --green:    #2E7D52;
   }
 
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
   html { scroll-behavior: smooth; }
-
   body {
     background: var(--black);
     color: var(--white);
@@ -33,6 +42,17 @@
     font-weight: 300;
     line-height: 1.65;
     overflow-x: hidden;
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-lt));
+    z-index: 200;
+    transition: width .1s linear;
   }
 
   /* ── NOISE OVERLAY ── */
@@ -58,32 +78,13 @@
     border-bottom: 1px solid var(--border);
     background: rgba(8,8,7,.92);
     backdrop-filter: blur(12px);
+    transition: padding .3s, background .3s;
   }
-  .nav-brand {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-  .nav-logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
-    letter-spacing: 5px;
-    color: var(--gold);
-    line-height: 1;
-  }
-  .nav-sub {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 2.5px;
-    color: var(--white-d);
-    text-transform: uppercase;
-  }
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 32px;
-    list-style: none;
-  }
+  nav.scrolled { padding: 12px 48px; background: rgba(8,8,7,.98); }
+  .nav-brand { display: flex; flex-direction: column; gap: 1px; text-decoration: none; }
+  .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 5px; color: var(--gold); line-height: 1; }
+  .nav-sub { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2.5px; color: var(--white-d); text-transform: uppercase; }
+  .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
   .nav-links a {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
@@ -107,6 +108,79 @@
     transition: background .2s;
   }
   .nav-cta:hover { background: var(--gold-lt) !important; color: var(--black) !important; }
+
+  /* ── HAMBURGER ── */
+  .nav-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    z-index: 110;
+  }
+  .nav-hamburger span {
+    display: block;
+    width: 22px;
+    height: 1.5px;
+    background: var(--gold);
+    transition: transform .3s ease, opacity .3s ease;
+    transform-origin: center;
+  }
+  .nav-hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+  .nav-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  .nav-hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+  /* ── MOBILE MENU ── */
+  .nav-mobile {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8,8,7,.98);
+    backdrop-filter: blur(16px);
+    z-index: 99;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity .3s ease;
+  }
+  .nav-mobile.visible { display: flex; }
+  .nav-mobile.open { opacity: 1; }
+  .nav-mobile a {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--white-d);
+    text-decoration: none;
+    padding: 12px 24px;
+    transition: color .2s;
+    letter-spacing: .5px;
+  }
+  .nav-mobile a:hover { color: var(--gold); }
+  .nav-mobile .nav-mobile-cta {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-style: normal;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--black) !important;
+    background: var(--gold);
+    padding: 14px 32px;
+    margin-top: 16px;
+    border-radius: 1px;
+  }
+  .nav-mobile .nav-mobile-cta:hover { background: var(--gold-lt); color: var(--black) !important; }
+  .nav-mobile-divider {
+    width: 40px;
+    height: 1px;
+    background: var(--border2);
+    margin: 16px 0;
+  }
 
   /* ── HERO ── */
   .hero {
@@ -132,10 +206,7 @@
     background: linear-gradient(90deg, transparent 0%, var(--gold-dim) 30%, var(--gold) 50%, var(--gold-dim) 70%, transparent 100%);
     animation: track-glow 3s ease-in-out infinite;
   }
-  @keyframes track-glow {
-    0%, 100% { opacity: .4; }
-    50% { opacity: 1; }
-  }
+  @keyframes track-glow { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
   .hero-eyebrow {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
@@ -148,13 +219,7 @@
     gap: 12px;
     animation: fade-up .8s ease both;
   }
-  .hero-eyebrow::before {
-    content: '';
-    display: block;
-    width: 40px;
-    height: 1px;
-    background: var(--gold);
-  }
+  .hero-eyebrow::before { content: ''; display: block; width: 40px; height: 1px; background: var(--gold); }
   .hero-h1 {
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(52px, 8vw, 108px);
@@ -166,14 +231,8 @@
     margin-bottom: 32px;
     animation: fade-up .8s .1s ease both;
   }
-  .hero-h1 em {
-    font-style: italic;
-    color: var(--gold);
-  }
-  .hero-h1 .outline {
-    -webkit-text-stroke: 1px rgba(242,237,224,.3);
-    color: transparent;
-  }
+  .hero-h1 em { font-style: italic; color: var(--gold); }
+  .hero-h1 .outline { -webkit-text-stroke: 1px rgba(242,237,224,.3); color: transparent; }
   .hero-body {
     max-width: 480px;
     font-size: 16px;
@@ -245,7 +304,6 @@
     text-transform: uppercase;
     color: var(--white-dd);
   }
-
   .hero-watermark {
     position: absolute;
     right: -40px;
@@ -259,11 +317,19 @@
     pointer-events: none;
     white-space: nowrap;
   }
+  @keyframes fade-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 
-  @keyframes fade-up {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: translateY(0); }
+  /* ── SCROLL REVEAL ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity .7s ease, transform .7s ease;
   }
+  .reveal.in-view { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: .1s; }
+  .reveal-delay-2 { transition-delay: .2s; }
+  .reveal-delay-3 { transition-delay: .3s; }
+  .reveal-delay-4 { transition-delay: .4s; }
 
   /* ── SECTION SHARED ── */
   section { position: relative; }
@@ -303,7 +369,6 @@
     padding: 28px 0;
     border-bottom: 1px solid var(--border);
     cursor: default;
-    transition: background .2s;
   }
   .how-step:first-child { border-top: 1px solid var(--border); }
   .how-step:hover .step-num { color: var(--gold); }
@@ -315,12 +380,7 @@
     line-height: 1;
     transition: color .2s;
   }
-  .step-title {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--white);
-    margin-bottom: 6px;
-  }
+  .step-title { font-size: 15px; font-weight: 500; color: var(--white); margin-bottom: 6px; }
   .step-body { font-size: 13.5px; color: var(--white-d); line-height: 1.6; }
 
   .how-visual {
@@ -338,25 +398,9 @@
     height: 2px;
     background: linear-gradient(90deg, transparent, var(--gold), transparent);
   }
-  .broadcast-demo {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .bd-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--white-dd);
-    margin-bottom: 4px;
-  }
-  .bd-timeline {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    height: 36px;
-  }
+  .broadcast-demo { display: flex; flex-direction: column; gap: 12px; }
+  .bd-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--white-dd); margin-bottom: 4px; }
+  .bd-timeline { display: flex; align-items: center; gap: 0; height: 36px; }
   .bd-block {
     height: 100%;
     display: flex;
@@ -377,62 +421,18 @@
     background: linear-gradient(90deg, transparent, rgba(201,168,76,.2), transparent);
     animation: shimmer 2s infinite;
   }
-  @keyframes shimmer {
-    from { transform: translateX(-100%); }
-    to   { transform: translateX(100%); }
-  }
-  .bd-arrow {
-    color: var(--white-dd);
-    font-size: 12px;
-    padding: 0 4px;
-    flex-shrink: 0;
-  }
+  @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  .bd-arrow { color: var(--white-dd); font-size: 12px; padding: 0 4px; flex-shrink: 0; }
   .bd-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-  .bd-vs {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: var(--white-dd);
-    text-transform: uppercase;
-    text-align: center;
-    margin: 4px 0;
-  }
-  .bd-callout {
-    background: rgba(201,168,76,.06);
-    border: 1px solid var(--border);
-    border-radius: 1px;
-    padding: 12px 16px;
-    margin-top: 16px;
-  }
-  .bd-callout-text {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 18px;
-    font-style: italic;
-    color: var(--gold);
-    line-height: 1.4;
-  }
-  .bd-callout-sub {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1px;
-    color: var(--white-dd);
-    margin-top: 6px;
-  }
+  .bd-vs { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--white-dd); text-transform: uppercase; text-align: center; margin: 4px 0; }
+  .bd-callout { background: rgba(201,168,76,.06); border: 1px solid var(--border); border-radius: 1px; padding: 12px 16px; margin-top: 16px; }
+  .bd-callout-text { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-style: italic; color: var(--gold); line-height: 1.4; }
+  .bd-callout-sub { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; color: var(--white-dd); margin-top: 6px; }
 
   /* ── FOUNDING FIVE ── */
   .founding { padding: 120px 0; background: var(--deep); }
-  .founding-inner {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 80px;
-    align-items: start;
-    margin-top: 60px;
-  }
-  .slot-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+  .founding-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; margin-top: 60px; }
+  .slot-grid { display: flex; flex-direction: column; gap: 8px; }
   .slot-row {
     display: flex;
     align-items: center;
@@ -445,68 +445,27 @@
   }
   .slot-row.taken { border-color: var(--gold-dim); background: rgba(201,168,76,.04); }
   .slot-row:not(.taken):hover { border-color: var(--border2); }
-  .slot-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
+  .slot-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .slot-icon.taken { background: rgba(201,168,76,.15); }
   .slot-icon.open  { background: rgba(255,255,255,.04); }
   .slot-trophy { font-size: 16px; }
-  .slot-num {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--white-dd);
-    text-transform: uppercase;
-    flex: 1;
-  }
-  .slot-status {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    padding: 4px 12px;
-    border-radius: 20px;
-  }
+  .slot-num { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--white-dd); text-transform: uppercase; flex: 1; }
+  .slot-status { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; }
   .slot-status.taken { background: rgba(201,168,76,.15); color: var(--gold); }
   .slot-status.open  { background: rgba(255,255,255,.05); color: var(--white-dd); }
-
-  .founding-perks {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-  .perk-item {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-  }
+  .founding-perks { display: flex; flex-direction: column; gap: 24px; }
+  .perk-item { display: flex; gap: 16px; align-items: flex-start; }
   .perk-icon {
-    width: 40px;
-    height: 40px;
+    width: 40px; height: 40px;
     border: 1px solid var(--border2);
     border-radius: 1px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-    color: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0; color: var(--gold);
   }
-  .perk-title {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--white);
-    margin-bottom: 4px;
-  }
+  .perk-title { font-size: 14px; font-weight: 500; color: var(--white); margin-bottom: 4px; }
   .perk-body { font-size: 13px; color: var(--white-d); line-height: 1.55; }
 
-  /* ── SIGN UP FORM ── */
+  /* ── FORM ── */
   .signup { padding: 120px 0; }
   .form-wrap {
     max-width: 680px;
@@ -524,25 +483,11 @@
     height: 2px;
     background: linear-gradient(90deg, transparent, var(--gold), transparent);
   }
-  .form-header {
-    padding: 36px 40px 28px;
-    border-bottom: 1px solid var(--border);
-  }
-  .form-header-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 28px;
-    font-weight: 300;
-    color: var(--white);
-    margin-bottom: 6px;
-  }
-  .form-header-sub {
-    font-size: 13px;
-    color: var(--white-d);
-  }
+  .form-header { padding: 36px 40px 28px; border-bottom: 1px solid var(--border); }
+  .form-header-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; color: var(--white); margin-bottom: 6px; }
+  .form-header-sub { font-size: 13px; color: var(--white-d); }
   form { padding: 36px 40px 40px; }
-  .form-section {
-    margin-bottom: 28px;
-  }
+  .form-section { margin-bottom: 28px; }
   .form-section-label {
     font-family: 'DM Mono', monospace;
     font-size: 10px;
@@ -553,12 +498,7 @@
     padding-bottom: 8px;
     border-bottom: 1px solid var(--border);
   }
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   .form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
   .form-field:last-child { margin-bottom: 0; }
   label {
@@ -582,51 +522,37 @@
     outline: none;
   }
   input::placeholder, textarea::placeholder { color: var(--white-dd); }
-  input:focus, select:focus, textarea:focus {
-    border-color: var(--gold);
-    background: rgba(201,168,76,.04);
-  }
+  input:focus, select:focus, textarea:focus { border-color: var(--gold); background: rgba(201,168,76,.04); }
+  input.error, select.error, textarea.error { border-color: var(--red) !important; }
+  input.valid, select.valid { border-color: rgba(46,125,82,.5); }
   select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A6330' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 14px center;
+    background-color: rgba(255,255,255,.04);
     padding-right: 36px;
     cursor: pointer;
   }
   select option { background: var(--panel); color: var(--white); }
   textarea { resize: vertical; min-height: 90px; }
-  .checkbox-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  .field-error {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .5px;
+    color: var(--red);
+    margin-top: 2px;
   }
-  .checkbox-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    cursor: pointer;
-  }
+  .checkbox-group { display: flex; flex-direction: column; gap: 10px; }
+  .checkbox-item { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
   .checkbox-item input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+    width: 18px; height: 18px;
     flex-shrink: 0;
     margin-top: 1px;
     accent-color: var(--gold);
     cursor: pointer;
   }
-  .checkbox-label {
-    font-size: 13px;
-    color: var(--white-d);
-    line-height: 1.5;
-    cursor: pointer;
-  }
-  .form-submit {
-    margin-top: 28px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    align-items: stretch;
-  }
+  .checkbox-label { font-size: 13px; color: var(--white-d); line-height: 1.5; cursor: pointer; }
+  .form-submit { margin-top: 28px; display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
   .submit-btn {
     width: 100%;
     font-family: 'DM Mono', monospace;
@@ -639,10 +565,11 @@
     padding: 18px;
     border-radius: 1px;
     cursor: pointer;
-    transition: background .2s, transform .15s;
+    transition: background .2s, transform .15s, opacity .2s;
     font-weight: 500;
   }
-  .submit-btn:hover { background: var(--gold-lt); transform: translateY(-1px); }
+  .submit-btn:hover:not(:disabled) { background: var(--gold-lt); transform: translateY(-1px); }
+  .submit-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
   .form-note {
     font-family: 'DM Mono', monospace;
     font-size: 10px;
@@ -660,8 +587,7 @@
     text-align: center;
   }
   .success-icon {
-    width: 64px;
-    height: 64px;
+    width: 64px; height: 64px;
     border: 1px solid var(--gold);
     border-radius: 50%;
     display: flex;
@@ -670,14 +596,14 @@
     margin: 0 auto 24px;
     font-size: 28px;
     color: var(--gold);
+    animation: pulse-ring 2s ease-out both;
   }
-  .success-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 32px;
-    font-style: italic;
-    color: var(--white);
-    margin-bottom: 12px;
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(201,168,76,.4); }
+    70% { box-shadow: 0 0 0 20px rgba(201,168,76,0); }
+    100% { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
   }
+  .success-title { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-style: italic; color: var(--white); margin-bottom: 12px; }
   .success-body { font-size: 14px; color: var(--white-d); line-height: 1.7; max-width: 400px; margin: 0 auto; }
 
   /* ── SOCIAL PROOF ── */
@@ -691,11 +617,7 @@
     border-radius: 2px;
     overflow: hidden;
   }
-  .proof-card {
-    background: var(--card);
-    padding: 36px 32px;
-    position: relative;
-  }
+  .proof-card { background: var(--card); padding: 36px 32px; position: relative; }
   .proof-card::before {
     content: '"';
     position: absolute;
@@ -705,34 +627,14 @@
     color: rgba(201,168,76,.1);
     line-height: 1;
   }
-  .proof-text {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 18px;
-    font-style: italic;
-    color: var(--white);
-    line-height: 1.6;
-    margin-bottom: 20px;
-    margin-top: 8px;
-  }
-  .proof-name {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 2px;
-  }
+  .proof-text { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-style: italic; color: var(--white); line-height: 1.6; margin-bottom: 20px; margin-top: 8px; }
+  .proof-name { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1.5px; color: var(--gold); text-transform: uppercase; margin-bottom: 2px; }
   .proof-role { font-size: 12px; color: var(--white-dd); }
 
   /* ── FAQ ── */
   .faq { padding: 120px 0; }
-  .faq-list {
-    max-width: 700px;
-    margin: 60px auto 0;
-  }
-  .faq-item {
-    border-bottom: 1px solid var(--border);
-  }
+  .faq-list { max-width: 700px; margin: 60px auto 0; }
+  .faq-item { border-bottom: 1px solid var(--border); }
   .faq-q {
     width: 100%;
     background: none;
@@ -752,13 +654,10 @@
   }
   .faq-q:hover { color: var(--gold); }
   .faq-icon {
-    width: 24px;
-    height: 24px;
+    width: 24px; height: 24px;
     border: 1px solid var(--border2);
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: 14px;
     color: var(--gold-dim);
     flex-shrink: 0;
@@ -773,49 +672,28 @@
     color: var(--white-d);
     line-height: 1.7;
   }
-  .faq-item.open .faq-a { max-height: 200px; padding-bottom: 22px; }
+  .faq-item.open .faq-a { max-height: 300px; padding-bottom: 22px; }
 
   /* ── FOOTER ── */
   footer {
     background: var(--deep);
     border-top: 1px solid var(--border);
-    padding: 48px;
+  }
+  .footer-main {
+    padding: 64px 48px 48px;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1.4fr 1fr 1fr;
     gap: 40px;
     align-items: start;
+    max-width: 1200px;
+    margin: 0 auto;
   }
-  .footer-brand-logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 24px;
-    letter-spacing: 5px;
-    color: var(--gold);
-    margin-bottom: 6px;
-  }
-  .footer-brand-sub {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: var(--white-dd);
-    text-transform: uppercase;
-    margin-bottom: 14px;
-  }
-  .footer-brand-body { font-size: 13px; color: var(--white-d); line-height: 1.6; }
-  .footer-col-title {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--gold-dim);
-    margin-bottom: 16px;
-  }
+  .footer-brand-logo { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 5px; color: var(--gold); margin-bottom: 6px; }
+  .footer-brand-sub { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--white-dd); text-transform: uppercase; margin-bottom: 14px; }
+  .footer-brand-body { font-size: 13px; color: var(--white-d); line-height: 1.6; max-width: 280px; }
+  .footer-col-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 16px; }
   .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .footer-links a {
-    font-size: 13px;
-    color: var(--white-d);
-    text-decoration: none;
-    transition: color .2s;
-  }
+  .footer-links a { font-size: 13px; color: var(--white-d); text-decoration: none; transition: color .2s; }
   .footer-links a:hover { color: var(--gold); }
   .footer-bottom {
     border-top: 1px solid var(--border);
@@ -825,60 +703,110 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
   }
-  .footer-copy {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1px;
-    color: var(--white-dd);
+  .footer-copy { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; color: var(--white-dd); }
+  .footer-reg { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .5px; color: var(--white-dd); }
+
+  /* ── SCROLL TO TOP ── */
+  #scroll-top {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    width: 44px;
+    height: 44px;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--gold);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .3s, visibility .3s, background .2s, transform .2s;
+    z-index: 50;
+    font-size: 16px;
   }
-  .footer-reg {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: .5px;
-    color: var(--white-dd);
-  }
+  #scroll-top.visible { opacity: 1; visibility: visible; }
+  #scroll-top:hover { background: rgba(201,168,76,.1); transform: translateY(-2px); }
 
   /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .how-grid { grid-template-columns: 1fr; gap: 48px; }
+    .founding-inner { grid-template-columns: 1fr; gap: 40px; }
+    .proof-grid { grid-template-columns: 1fr; }
+  }
+
   @media (max-width: 768px) {
     nav { padding: 14px 20px; }
+    nav.scrolled { padding: 10px 20px; }
     .nav-links { display: none; }
+    .nav-hamburger { display: flex; }
     .hero { padding: 120px 20px 80px; }
     .hero-watermark { font-size: 120px; }
     .container { padding: 0 20px; }
-    .how-grid { grid-template-columns: 1fr; gap: 40px; }
-    .founding-inner { grid-template-columns: 1fr; gap: 40px; }
-    .proof-grid { grid-template-columns: 1fr; }
     form { padding: 24px 20px; }
     .form-header { padding: 24px 20px; }
     .form-row { grid-template-columns: 1fr; }
-    footer { grid-template-columns: 1fr; padding: 32px 20px; }
+    .footer-main { grid-template-columns: 1fr; padding: 40px 20px 32px; }
     .footer-bottom { padding: 16px 20px; }
     .hero-stat-row { gap: 28px; }
+    .how { padding: 80px 0; }
+    .founding { padding: 80px 0; }
+    .signup { padding: 80px 0; }
+    .proof { padding: 80px 0; }
+    .faq { padding: 80px 0; }
+    #scroll-top { bottom: 20px; right: 20px; }
+  }
+
+  @media (max-width: 480px) {
+    .hero-h1 { font-size: clamp(40px, 12vw, 72px); }
+    .hero-stat-row { flex-wrap: wrap; gap: 20px; }
+    .hero-stat-num { font-size: 36px; }
+    .btn-primary, .btn-secondary { padding: 14px 24px; font-size: 11px; }
   }
 </style>
 </head>
 <body>
 
+<div id="progress-bar" role="progressbar" aria-hidden="true"></div>
+
+<!-- MOBILE MENU -->
+<div class="nav-mobile" id="navMobile" role="dialog" aria-modal="true" aria-label="Navigation menu">
+  <a href="#how" onclick="closeMenu()">How it works</a>
+  <a href="#founding" onclick="closeMenu()">Founding Five</a>
+  <a href="#faq" onclick="closeMenu()">FAQ</a>
+  <div class="nav-mobile-divider"></div>
+  <a href="#signup" class="nav-mobile-cta" onclick="closeMenu()">Apply now</a>
+</div>
+
 <!-- NAV -->
-<nav>
-  <div class="nav-brand">
+<nav id="mainNav" role="navigation" aria-label="Main navigation">
+  <a href="#home" class="nav-brand" aria-label="P.A.S.A. home">
     <div class="nav-logo">P.A.S.A.</div>
     <div class="nav-sub">Punters Association of South Africa</div>
-  </div>
+  </a>
   <ul class="nav-links">
     <li><a href="#how">How it works</a></li>
     <li><a href="#founding">Founding Five</a></li>
     <li><a href="#faq">FAQ</a></li>
     <li><a href="#signup" class="nav-cta">Apply now</a></li>
   </ul>
+  <button class="nav-hamburger" id="hamburger" aria-label="Open navigation menu" aria-expanded="false" aria-controls="navMobile">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
 </nav>
 
 <!-- HERO -->
 <section class="hero" id="home">
   <div class="hero-bg"></div>
-  <div class="hero-watermark">WIN</div>
-  <div class="hero-track"></div>
+  <div class="hero-watermark" aria-hidden="true">WIN</div>
+  <div class="hero-track" aria-hidden="true"></div>
   <div class="container" style="position:relative;z-index:1;">
     <div class="hero-eyebrow">Winner's Spotlight · Pilot Programme 2025</div>
     <h1 class="hero-h1">
@@ -891,20 +819,20 @@
       <a href="#signup" class="btn-primary">Claim your founding slot</a>
       <a href="#how" class="btn-secondary">See how it works</a>
     </div>
-    <div class="hero-stat-row">
-      <div>
-        <div class="hero-stat-num">5</div>
+    <div class="hero-stat-row" role="list">
+      <div role="listitem">
+        <div class="hero-stat-num" data-count="5">5</div>
         <div class="hero-stat-label">Founding slots total</div>
       </div>
-      <div>
-        <div class="hero-stat-num">4</div>
+      <div role="listitem">
+        <div class="hero-stat-num" data-count="4">4</div>
         <div class="hero-stat-label">Still available</div>
       </div>
-      <div>
+      <div role="listitem">
         <div class="hero-stat-num">2 min</div>
         <div class="hero-stat-label">Live spotlight per win</div>
       </div>
-      <div>
+      <div role="listitem">
         <div class="hero-stat-num">R0</div>
         <div class="hero-stat-label">Cost to founders</div>
       </div>
@@ -915,32 +843,32 @@
 <!-- HOW IT WORKS -->
 <section class="how" id="how">
   <div class="container">
-    <div class="section-tag">The programme</div>
-    <h2 class="section-title">Dead air turned into<br><em>live opportunity</em></h2>
+    <div class="section-tag reveal">The programme</div>
+    <h2 class="section-title reveal reveal-delay-1">Dead air turned into<br><em>live opportunity</em></h2>
     <div class="how-grid">
       <div class="how-steps">
-        <div class="how-step">
+        <div class="how-step reveal">
           <div class="step-num">01</div>
           <div>
             <div class="step-title">Apply and commit</div>
             <div class="step-body">Complete the short application below. We confirm your horse's active race entries at Greyville or Scottsville and prepare your branded graphics package for approval.</div>
           </div>
         </div>
-        <div class="how-step">
+        <div class="how-step reveal reveal-delay-1">
           <div class="step-num">02</div>
           <div>
             <div class="step-title">Your horse wins</div>
             <div class="step-body">Our crew is already at the venue. The moment your horse crosses the line, the Winner's Spotlight segment activates — your logo, your business, your message.</div>
           </div>
         </div>
-        <div class="how-step">
+        <div class="how-step reveal reveal-delay-2">
           <div class="step-num">03</div>
           <div>
             <div class="step-title">You go live</div>
             <div class="step-body">A 2-minute branded segment airs on GallopTV and Tellytrack immediately after the race — in front of tens of thousands of live viewers at their highest point of engagement.</div>
           </div>
         </div>
-        <div class="how-step">
+        <div class="how-step reveal reveal-delay-3">
           <div class="step-num">04</div>
           <div>
             <div class="step-title">You get the reel</div>
@@ -948,24 +876,24 @@
           </div>
         </div>
       </div>
-      <div class="how-visual">
+      <div class="how-visual reveal reveal-delay-2">
         <div class="broadcast-demo">
           <div class="bd-label">Current broadcast — post-race window</div>
-          <div class="bd-timeline">
+          <div class="bd-timeline" role="img" aria-label="Timeline showing race ending followed by dead air then next race">
             <div class="bd-block race">Race ends</div>
-            <div class="bd-arrow">→</div>
+            <div class="bd-arrow" aria-hidden="true">→</div>
             <div class="bd-block dead">Dead air</div>
-            <div class="bd-arrow">→</div>
+            <div class="bd-arrow" aria-hidden="true">→</div>
             <div class="bd-block next">Next race</div>
           </div>
           <hr class="bd-divider">
           <div class="bd-vs">With Winner's Spotlight</div>
           <hr class="bd-divider">
-          <div class="bd-timeline">
+          <div class="bd-timeline" role="img" aria-label="Timeline showing race ending followed by your spotlight then next race">
             <div class="bd-block race">Race ends</div>
-            <div class="bd-arrow">→</div>
+            <div class="bd-arrow" aria-hidden="true">→</div>
             <div class="bd-block spotlight">Your spotlight</div>
-            <div class="bd-arrow">→</div>
+            <div class="bd-arrow" aria-hidden="true">→</div>
             <div class="bd-block next">Next race</div>
           </div>
           <div class="bd-callout">
@@ -981,62 +909,62 @@
 <!-- FOUNDING FIVE -->
 <section class="founding" id="founding">
   <div class="container">
-    <div class="section-tag">Exclusive offer</div>
-    <h2 class="section-title">The <em>Founding Five</em></h2>
-    <p style="color:var(--white-d);font-size:15px;max-width:520px;margin-bottom:0;line-height:1.7;">Five horse-owning business people. Five complimentary inaugural spotlights. We want your feedback more than your money — for now.</p>
+    <div class="section-tag reveal">Exclusive offer</div>
+    <h2 class="section-title reveal reveal-delay-1">The <em>Founding Five</em></h2>
+    <p class="reveal reveal-delay-2" style="color:var(--white-d);font-size:15px;max-width:520px;margin-bottom:0;line-height:1.7;">Five horse-owning business people. Five complimentary inaugural spotlights. We want your feedback more than your money — for now.</p>
     <div class="founding-inner">
-      <div class="slot-grid">
+      <div class="slot-grid reveal">
         <div class="slot-row taken">
-          <div class="slot-icon taken"><span class="slot-trophy">🏆</span></div>
+          <div class="slot-icon taken"><span class="slot-trophy" role="img" aria-label="trophy">🏆</span></div>
           <div class="slot-num">Founding slot 01</div>
           <div class="slot-status taken">Claimed</div>
         </div>
         <div class="slot-row">
-          <div class="slot-icon open"><span class="slot-trophy">🏆</span></div>
+          <div class="slot-icon open"><span class="slot-trophy" role="img" aria-label="trophy">🏆</span></div>
           <div class="slot-num">Founding slot 02</div>
           <div class="slot-status open">Available</div>
         </div>
         <div class="slot-row">
-          <div class="slot-icon open"><span class="slot-trophy">🏆</span></div>
+          <div class="slot-icon open"><span class="slot-trophy" role="img" aria-label="trophy">🏆</span></div>
           <div class="slot-num">Founding slot 03</div>
           <div class="slot-status open">Available</div>
         </div>
         <div class="slot-row">
-          <div class="slot-icon open"><span class="slot-trophy">🏆</span></div>
+          <div class="slot-icon open"><span class="slot-trophy" role="img" aria-label="trophy">🏆</span></div>
           <div class="slot-num">Founding slot 04</div>
           <div class="slot-status open">Available</div>
         </div>
         <div class="slot-row">
-          <div class="slot-icon open"><span class="slot-trophy">🏆</span></div>
+          <div class="slot-icon open"><span class="slot-trophy" role="img" aria-label="trophy">🏆</span></div>
           <div class="slot-num">Founding slot 05</div>
           <div class="slot-status open">Available</div>
         </div>
         <a href="#signup" class="btn-primary" style="text-align:center;margin-top:8px;">Claim your slot →</a>
       </div>
       <div class="founding-perks">
-        <div class="perk-item">
-          <div class="perk-icon">📺</div>
+        <div class="perk-item reveal reveal-delay-1">
+          <div class="perk-icon" aria-hidden="true">📺</div>
           <div>
             <div class="perk-title">Live national broadcast</div>
             <div class="perk-body">Your 2-minute segment airs on GallopTV and Tellytrack, live, at the moment your horse wins. No production costs. No prep required.</div>
           </div>
         </div>
-        <div class="perk-item">
-          <div class="perk-icon">🎬</div>
+        <div class="perk-item reveal reveal-delay-2">
+          <div class="perk-icon" aria-hidden="true">🎬</div>
           <div>
             <div class="perk-title">Edited social reel — 24hr delivery</div>
             <div class="perk-body">A professional social media reel, branded and ready to post, delivered within 24 hours of every race meeting where your horse activates.</div>
           </div>
         </div>
-        <div class="perk-item">
-          <div class="perk-icon">🏅</div>
+        <div class="perk-item reveal reveal-delay-3">
+          <div class="perk-icon" aria-hidden="true">🏅</div>
           <div>
             <div class="perk-title">Founding member status</div>
             <div class="perk-body">Your name and business featured in the P.A.S.A. pilot report. Priority access to the full national programme at preferred rates when we scale.</div>
           </div>
         </div>
-        <div class="perk-item">
-          <div class="perk-icon">⚖️</div>
+        <div class="perk-item reveal reveal-delay-4">
+          <div class="perk-icon" aria-hidden="true">⚖️</div>
           <div>
             <div class="perk-title">Punter Justice Fund contribution</div>
             <div class="perk-body">Your participation seeds South Africa's first Punter Justice Fund — a fairness mechanism that returns value to punters when racing outcomes are affected by disciplinary action.</div>
@@ -1050,38 +978,44 @@
 <!-- SIGN UP FORM -->
 <section class="signup" id="signup">
   <div class="container">
-    <div class="section-tag">Apply now</div>
-    <h2 class="section-title" style="text-align:center;">Claim your <em>Founding Five</em> slot</h2>
-    <p style="text-align:center;color:var(--white-d);font-size:14px;max-width:500px;margin:12px auto 0;">4 slots remaining. Complete the form below and our team will be in touch within 48 hours to confirm your participation.</p>
+    <div class="section-tag reveal" style="text-align:center;">Apply now</div>
+    <h2 class="section-title reveal reveal-delay-1" style="text-align:center;">Claim your <em>Founding Five</em> slot</h2>
+    <p class="reveal reveal-delay-2" style="text-align:center;color:var(--white-d);font-size:14px;max-width:500px;margin:12px auto 0;">4 slots remaining. Complete the form below and our team will be in touch within 48 hours to confirm your participation.</p>
 
-    <div class="form-wrap">
-      <div class="form-header">
+    <div class="form-wrap reveal reveal-delay-2">
+      <div class="form-header" id="formHeader">
         <div class="form-header-title">Founder Application</div>
         <div class="form-header-sub">Winner's Spotlight Pilot Programme · Greyville &amp; Scottsville · 2025</div>
       </div>
 
-      <form id="applyForm" onsubmit="handleSubmit(event)" novalidate>
-
+      <!--
+        FORM SUBMISSION SETUP:
+        This form uses Formspree for email delivery.
+        To activate: sign up at https://formspree.io, create a form,
+        and replace "YOUR_FORMSPREE_ID" in the JS below with your form ID.
+        Without a Formspree ID, submissions will open your email client as fallback.
+      -->
+      <form id="applyForm" novalidate>
         <div class="form-section">
           <div class="form-section-label">Your details</div>
           <div class="form-row">
             <div class="form-field">
-              <label for="fname">First name *</label>
-              <input type="text" id="fname" name="fname" placeholder="John" required>
+              <label for="fname">First name <span aria-hidden="true" style="color:var(--red)">*</span></label>
+              <input type="text" id="fname" name="fname" placeholder="John" required autocomplete="given-name">
             </div>
             <div class="form-field">
-              <label for="lname">Last name *</label>
-              <input type="text" id="lname" name="lname" placeholder="Smith" required>
+              <label for="lname">Last name <span aria-hidden="true" style="color:var(--red)">*</span></label>
+              <input type="text" id="lname" name="lname" placeholder="Smith" required autocomplete="family-name">
             </div>
           </div>
           <div class="form-row">
             <div class="form-field">
-              <label for="email">Email address *</label>
-              <input type="email" id="email" name="email" placeholder="john@yourbusiness.co.za" required>
+              <label for="email">Email address <span aria-hidden="true" style="color:var(--red)">*</span></label>
+              <input type="email" id="email" name="email" placeholder="john@yourbusiness.co.za" required autocomplete="email">
             </div>
             <div class="form-field">
-              <label for="phone">Mobile number *</label>
-              <input type="tel" id="phone" name="phone" placeholder="082 000 0000" required>
+              <label for="phone">Mobile number <span aria-hidden="true" style="color:var(--red)">*</span></label>
+              <input type="tel" id="phone" name="phone" placeholder="082 000 0000" required autocomplete="tel">
             </div>
           </div>
         </div>
@@ -1089,8 +1023,8 @@
         <div class="form-section">
           <div class="form-section-label">Your business</div>
           <div class="form-field">
-            <label for="bizname">Business name *</label>
-            <input type="text" id="bizname" name="bizname" placeholder="Your business name" required>
+            <label for="bizname">Business name <span aria-hidden="true" style="color:var(--red)">*</span></label>
+            <input type="text" id="bizname" name="bizname" placeholder="Your business name" required autocomplete="organization">
           </div>
           <div class="form-row">
             <div class="form-field">
@@ -1106,12 +1040,13 @@
                 <option>Manufacturing</option>
                 <option>Technology</option>
                 <option>Transport &amp; Logistics</option>
+                <option>Agriculture</option>
                 <option>Other</option>
               </select>
             </div>
             <div class="form-field">
               <label for="website">Business website</label>
-              <input type="url" id="website" name="website" placeholder="www.yourbusiness.co.za">
+              <input type="url" id="website" name="website" placeholder="www.yourbusiness.co.za" autocomplete="url">
             </div>
           </div>
           <div class="form-field">
@@ -1124,7 +1059,7 @@
           <div class="form-section-label">Your horse</div>
           <div class="form-row">
             <div class="form-field">
-              <label for="horsename">Horse name *</label>
+              <label for="horsename">Horse name <span aria-hidden="true" style="color:var(--red)">*</span></label>
               <input type="text" id="horsename" name="horsename" placeholder="Horse name" required>
             </div>
             <div class="form-field">
@@ -1133,7 +1068,7 @@
             </div>
           </div>
           <div class="form-field">
-            <label for="venue">Primary race venue *</label>
+            <label for="venue">Primary race venue <span aria-hidden="true" style="color:var(--red)">*</span></label>
             <select id="venue" name="venue" required>
               <option value="" disabled selected>Select venue</option>
               <option>Greyville Racecourse</option>
@@ -1151,37 +1086,36 @@
           <div class="form-section-label">Confirmation</div>
           <div class="checkbox-group">
             <label class="checkbox-item">
-              <input type="checkbox" name="consent_broadcast" required>
+              <input type="checkbox" name="consent_broadcast" id="cb1" required>
               <span class="checkbox-label">I consent to being filmed in the winner's circle and my business being featured in the Winner's Spotlight broadcast segment.</span>
             </label>
             <label class="checkbox-item">
-              <input type="checkbox" name="consent_testimonial" required>
+              <input type="checkbox" name="consent_testimonial" id="cb2" required>
               <span class="checkbox-label">I agree to provide honest feedback and a short testimonial after my Spotlight airs, as part of the pilot programme terms.</span>
             </label>
             <label class="checkbox-item">
-              <input type="checkbox" name="consent_comms">
+              <input type="checkbox" name="consent_comms" id="cb3">
               <span class="checkbox-label">I'd like to receive updates from P.A.S.A. about the Winner's Spotlight programme and future opportunities.</span>
             </label>
           </div>
+          <div id="checkboxError" class="field-error" style="display:none;margin-top:8px;">Please confirm the required items above to proceed.</div>
         </div>
 
         <div class="form-submit">
-          <button type="submit" class="submit-btn">Submit Founding Application →</button>
-          <div class="form-note">
+          <button type="submit" id="submitBtn" class="submit-btn">Submit Founding Application →</button>
+          <p class="form-note">
             Your application is reviewed personally by the P.A.S.A. team within 48 hours.<br>
             This is a complimentary pilot. No payment required at this stage.<br>
-            <a href="#">Privacy policy</a> · <a href="#">Programme terms</a>
-          </div>
+            <a href="mailto:info@puntersassociation.co.za">Contact us</a> with any questions.
+          </p>
         </div>
-
       </form>
 
-      <div class="form-success" id="formSuccess">
-        <div class="success-icon">✓</div>
+      <div class="form-success" id="formSuccess" role="alert">
+        <div class="success-icon" aria-hidden="true">✓</div>
         <div class="success-title">Application received.</div>
         <div class="success-body">Thank you for applying to the Founding Five. A member of the P.A.S.A. team will contact you within 48 hours to confirm your slot and walk you through next steps.</div>
       </div>
-
     </div>
   </div>
 </section>
@@ -1189,20 +1123,20 @@
 <!-- SOCIAL PROOF -->
 <section class="proof" id="proof">
   <div class="container">
-    <div class="section-tag">Early voices</div>
-    <h2 class="section-title">What the industry<br><em>is already saying</em></h2>
+    <div class="section-tag reveal">Early voices</div>
+    <h2 class="section-title reveal reveal-delay-1">What the industry<br><em>is already saying</em></h2>
     <div class="proof-grid">
-      <div class="proof-card">
+      <div class="proof-card reveal">
         <div class="proof-text">"I've been looking for a way to make my horse ownership work commercially for years. This is the first idea that actually makes sense for business people like us."</div>
         <div class="proof-name">KZN Horse Owner</div>
         <div class="proof-role">Construction industry · Greyville participant</div>
       </div>
-      <div class="proof-card">
+      <div class="proof-card reveal reveal-delay-1">
         <div class="proof-text">"That post-race window is the most underutilised airtime in South African sport. Someone was always going to figure this out — glad it's being done properly."</div>
         <div class="proof-name">Racing Industry Contact</div>
         <div class="proof-role">KwaZulu-Natal racing community</div>
       </div>
-      <div class="proof-card">
+      <div class="proof-card reveal reveal-delay-2">
         <div class="proof-text">"My horse winning at Greyville reached maybe 200 people on the day. A national broadcast segment would have reached tens of thousands. The maths is obvious."</div>
         <div class="proof-name">Syndicate Owner</div>
         <div class="proof-role">Hospitality sector · Scottsville</div>
@@ -1214,56 +1148,56 @@
 <!-- FAQ -->
 <section class="faq" id="faq">
   <div class="container">
-    <div class="section-tag">Questions</div>
-    <h2 class="section-title" style="text-align:center;">Everything you need<br>to <em>know</em></h2>
-    <div class="faq-list">
+    <div class="section-tag reveal" style="text-align:center;">Questions</div>
+    <h2 class="section-title reveal reveal-delay-1" style="text-align:center;">Everything you need<br>to <em>know</em></h2>
+    <div class="faq-list reveal reveal-delay-2">
 
       <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
+        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
           Is the Founding Five offer genuinely free?
-          <span class="faq-icon">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </button>
-        <div class="faq-a">Yes. The pilot is complimentary for all five founding participants. P.A.S.A. absorbs all production, filming, editing, and delivery costs. In exchange, we ask for your honest feedback and a short testimonial after your Spotlight airs. No payment is required at any stage of the pilot.</div>
+        <div class="faq-a" role="region">Yes. The pilot is complimentary for all five founding participants. P.A.S.A. absorbs all production, filming, editing, and delivery costs. In exchange, we ask for your honest feedback and a short testimonial after your Spotlight airs. No payment is required at any stage of the pilot.</div>
       </div>
 
       <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
+        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
           What if my horse doesn't win during the pilot?
-          <span class="faq-icon">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </button>
-        <div class="faq-a">The Spotlight activates on a race win. If your horse does not win across the 6 pilot meetings, the segment does not air — but your founding member status is retained, and you receive priority access at preferred rates when the programme expands to include "placed" finishes (top 3) from Tier 2 onwards. We strongly recommend applying with a horse that has active entries across multiple pilot meetings.</div>
+        <div class="faq-a" role="region">The Spotlight activates on a race win. If your horse does not win across the 6 pilot meetings, the segment does not air — but your founding member status is retained, and you receive priority access at preferred rates when the programme expands to include "placed" finishes (top 3) from Tier 2 onwards. We strongly recommend applying with a horse that has active entries across multiple pilot meetings.</div>
       </div>
 
       <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
+        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
           Which venues and race meetings does the pilot cover?
-          <span class="faq-icon">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </button>
-        <div class="faq-a">The pilot runs across 6 consecutive race meetings at Greyville Racecourse and/or Scottsville Racecourse in KwaZulu-Natal. Our crew will be on-site at each meeting. We will confirm your specific race entries with you during the onboarding process in Week 1–2 of the programme.</div>
+        <div class="faq-a" role="region">The pilot runs across 6 consecutive race meetings at Greyville Racecourse and/or Scottsville Racecourse in KwaZulu-Natal. Our crew will be on-site at each meeting. We will confirm your specific race entries with you during the onboarding process in Week 1–2 of the programme.</div>
       </div>
 
       <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
+        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
           What exactly does the segment look like?
-          <span class="faq-icon">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </button>
-        <div class="faq-a">A 2-minute live segment filmed in the winner's circle immediately after your race win. It extends the existing GallopTV owner interview format into a branded "Winner's Business Spotlight" — with your business name, logo, and website displayed as a lower-third graphic, and a simple fan offer if you choose to include one. The segment airs on GallopTV and Tellytrack during the post-race window. You will approve the graphics and segment format before the first broadcast.</div>
+        <div class="faq-a" role="region">A 2-minute live segment filmed in the winner's circle immediately after your race win. It extends the existing GallopTV owner interview format into a branded "Winner's Business Spotlight" — with your business name, logo, and website displayed as a lower-third graphic, and a simple fan offer if you choose to include one. The segment airs on GallopTV and Tellytrack during the post-race window. You will approve the graphics and segment format before the first broadcast.</div>
       </div>
 
       <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
+        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
           What is the Punter Justice Fund?
-          <span class="faq-icon">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </button>
-        <div class="faq-a">The Punter Justice Fund is P.A.S.A.'s proprietary fairness mechanism. A portion of programme revenue is ring-fenced into the fund, which is deployed as betting wallet credits for affected punters when NHA disciplinary rulings or jockey fines impact race outcomes. Credits remain within the licensed betting ecosystem. Full fund governance details are available on request.</div>
+        <div class="faq-a" role="region">The Punter Justice Fund is P.A.S.A.'s proprietary fairness mechanism. A portion of programme revenue is ring-fenced into the fund, which is deployed as betting wallet credits for affected punters when NHA disciplinary rulings or jockey fines impact race outcomes. Credits remain within the licensed betting ecosystem. Full fund governance details are available on request.</div>
       </div>
 
       <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
+        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
           When does the pilot begin?
-          <span class="faq-icon">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </button>
-        <div class="faq-a">Owner onboarding runs in Weeks 1–2 following confirmation of all five founding participants. Production setup takes place in Week 3. The first live broadcast is targeted for Week 4. We are working toward a 2025 KZN season start date. Apply now to secure your slot and we will confirm your specific onboarding timeline within 48 hours.</div>
+        <div class="faq-a" role="region">Owner onboarding runs in Weeks 1–2 following confirmation of all five founding participants. Production setup takes place in Week 3. The first live broadcast is targeted for Week 4. We are working toward a 2025 KZN season start date. Apply now to secure your slot and we will confirm your specific onboarding timeline within 48 hours.</div>
       </div>
 
     </div>
@@ -1272,66 +1206,247 @@
 
 <!-- FOOTER -->
 <footer>
-  <div>
-    <div class="footer-brand-logo">P.A.S.A.</div>
-    <div class="footer-brand-sub">Punters Association of South Africa (Pty) Ltd</div>
-    <div class="footer-brand-body">Turning South African racing's most valuable dead air into a national marketing platform — for owners, operators, and punters alike.</div>
+  <div class="footer-main">
+    <div>
+      <div class="footer-brand-logo">P.A.S.A.</div>
+      <div class="footer-brand-sub">Punters Association of South Africa (Pty) Ltd</div>
+      <div class="footer-brand-body">Turning South African racing's most valuable dead air into a national marketing platform — for owners, operators, and punters alike.</div>
+    </div>
+    <div>
+      <div class="footer-col-title">Programme</div>
+      <ul class="footer-links">
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#founding">Founding Five</a></li>
+        <li><a href="#signup">Apply now</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Contact</div>
+      <ul class="footer-links">
+        <li><a href="mailto:info@puntersassociation.co.za">info@puntersassociation.co.za</a></li>
+        <li><a href="https://www.puntersassociation.co.za" target="_blank" rel="noopener noreferrer">puntersassociation.co.za</a></li>
+      </ul>
+    </div>
   </div>
-  <div>
-    <div class="footer-col-title">Programme</div>
-    <ul class="footer-links">
-      <li><a href="#how">How it works</a></li>
-      <li><a href="#founding">Founding Five</a></li>
-      <li><a href="#signup">Apply now</a></li>
-      <li><a href="#faq">FAQ</a></li>
-    </ul>
-  </div>
-  <div>
-    <div class="footer-col-title">Contact</div>
-    <ul class="footer-links">
-      <li><a href="mailto:info@puntersassociation.co.za">info@puntersassociation.co.za</a></li>
-      <li><a href="tel:+27000000000">+27 (0) 00 000 0000</a></li>
-      <li><a href="https://www.puntersassociation.co.za">puntersassociation.co.za</a></li>
-      <li><a href="#">GallopTV</a></li>
-    </ul>
+  <div class="footer-bottom">
+    <div class="footer-copy">© <span id="footerYear"></span> Punters Association of South Africa (Pty) Ltd. All rights reserved.</div>
+    <div class="footer-reg">KwaZulu-Natal, South Africa</div>
   </div>
 </footer>
-<div class="footer-bottom">
-  <div class="footer-copy">© 2025 Punters Association of South Africa (Pty) Ltd. All rights reserved.</div>
-  <div class="footer-reg">Reg No: [CIPC Registration Number] · Durban, KwaZulu-Natal</div>
-</div>
+
+<!-- SCROLL TO TOP -->
+<button id="scroll-top" aria-label="Scroll to top" title="Back to top">↑</button>
 
 <script>
+  /* ── CONFIG ── */
+  // Replace with your Formspree form ID after signing up at https://formspree.io
+  var FORMSPREE_ID = '';
+
+  /* ── PROGRESS BAR ── */
+  var progressBar = document.getElementById('progress-bar');
+  function updateProgress() {
+    var scrolled = window.scrollY;
+    var total = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (total > 0 ? (scrolled / total) * 100 : 0) + '%';
+  }
+
+  /* ── NAV SCROLL STATE ── */
+  var nav = document.getElementById('mainNav');
+  var scrollTopBtn = document.getElementById('scroll-top');
+  function onScroll() {
+    updateProgress();
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+    scrollTopBtn.classList.toggle('visible', window.scrollY > 400);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  /* ── SCROLL TO TOP ── */
+  scrollTopBtn.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  /* ── MOBILE MENU ── */
+  var hamburger = document.getElementById('hamburger');
+  var mobileMenu = document.getElementById('navMobile');
+  var menuOpen = false;
+
+  function openMenu() {
+    menuOpen = true;
+    mobileMenu.classList.add('visible');
+    requestAnimationFrame(function() { mobileMenu.classList.add('open'); });
+    hamburger.classList.add('open');
+    hamburger.setAttribute('aria-expanded', 'true');
+    hamburger.setAttribute('aria-label', 'Close navigation menu');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMenu() {
+    menuOpen = false;
+    mobileMenu.classList.remove('open');
+    hamburger.classList.remove('open');
+    hamburger.setAttribute('aria-expanded', 'false');
+    hamburger.setAttribute('aria-label', 'Open navigation menu');
+    document.body.style.overflow = '';
+    setTimeout(function() { mobileMenu.classList.remove('visible'); }, 300);
+  }
+
+  hamburger.addEventListener('click', function() {
+    menuOpen ? closeMenu() : openMenu();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && menuOpen) closeMenu();
+  });
+
+  /* ── SMOOTH SCROLL ── */
+  document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+    a.addEventListener('click', function(e) {
+      var id = this.getAttribute('href');
+      if (id === '#') return;
+      var target = document.querySelector(id);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  /* ── SCROLL REVEAL ── */
+  var revealEls = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  revealEls.forEach(function(el) { observer.observe(el); });
+
+  /* ── FAQ ── */
   function toggleFaq(btn) {
     var item = btn.closest('.faq-item');
     var isOpen = item.classList.contains('open');
-    document.querySelectorAll('.faq-item.open').forEach(function(el) { el.classList.remove('open'); });
-    if (!isOpen) item.classList.add('open');
-  }
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    var form = document.getElementById('applyForm');
-    var success = document.getElementById('formSuccess');
-    var required = form.querySelectorAll('[required]');
-    var valid = true;
-    required.forEach(function(field) {
-      if (!field.value && field.type !== 'checkbox') { field.style.borderColor = '#A83232'; valid = false; }
-      else if (field.type === 'checkbox' && !field.checked) { valid = false; }
-      else { field.style.borderColor = ''; }
+    document.querySelectorAll('.faq-item.open').forEach(function(el) {
+      el.classList.remove('open');
+      el.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
     });
-    if (!valid) return;
-    form.style.display = 'none';
-    success.style.display = 'block';
-    document.querySelector('.form-header').style.display = 'none';
+    if (!isOpen) {
+      item.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
   }
 
-  document.querySelectorAll('a[href^="#"]').forEach(function(a) {
-    a.addEventListener('click', function(e) {
-      var target = document.querySelector(this.getAttribute('href'));
-      if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  /* ── FORM VALIDATION & SUBMISSION ── */
+  function validateField(field) {
+    var wrapper = field.closest('.form-field');
+    if (!wrapper) return true;
+    var existing = wrapper.querySelector('.field-error');
+    if (existing) existing.remove();
+    field.classList.remove('error', 'valid');
+
+    if (field.required && !field.value.trim()) {
+      field.classList.add('error');
+      var msg = document.createElement('span');
+      msg.className = 'field-error';
+      msg.setAttribute('role', 'alert');
+      msg.textContent = 'This field is required.';
+      wrapper.appendChild(msg);
+      return false;
+    }
+    if (field.type === 'email' && field.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) {
+      field.classList.add('error');
+      var msg = document.createElement('span');
+      msg.className = 'field-error';
+      msg.setAttribute('role', 'alert');
+      msg.textContent = 'Please enter a valid email address.';
+      wrapper.appendChild(msg);
+      return false;
+    }
+    if (field.value.trim()) field.classList.add('valid');
+    return true;
+  }
+
+  document.querySelectorAll('#applyForm input:not([type="checkbox"]), #applyForm select, #applyForm textarea').forEach(function(field) {
+    field.addEventListener('blur', function() { validateField(this); });
+    field.addEventListener('input', function() {
+      if (this.classList.contains('error')) validateField(this);
     });
   });
+
+  document.getElementById('applyForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var form = this;
+    var btn = document.getElementById('submitBtn');
+    var success = document.getElementById('formSuccess');
+    var checkboxErr = document.getElementById('checkboxError');
+
+    // Validate text fields
+    var valid = true;
+    form.querySelectorAll('input:not([type="checkbox"]), select, textarea').forEach(function(f) {
+      if (!validateField(f)) valid = false;
+    });
+
+    // Validate required checkboxes
+    var cb1 = document.getElementById('cb1');
+    var cb2 = document.getElementById('cb2');
+    var checkboxesOk = cb1.checked && cb2.checked;
+    if (!checkboxesOk) {
+      valid = false;
+      checkboxErr.style.display = 'block';
+    } else {
+      checkboxErr.style.display = 'none';
+    }
+
+    if (!valid) {
+      var firstError = form.querySelector('.error');
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    // Submit
+    btn.textContent = 'Submitting…';
+    btn.disabled = true;
+
+    var submitted = false;
+
+    if (FORMSPREE_ID) {
+      try {
+        var res = await fetch('https://formspree.io/f/' + FORMSPREE_ID, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'Accept': 'application/json' }
+        });
+        if (res.ok) submitted = true;
+      } catch (err) {}
+    }
+
+    if (!submitted) {
+      // Mailto fallback — compiles form data into email body
+      var lines = [];
+      new FormData(form).forEach(function(v, k) { if (v) lines.push(k + ': ' + v); });
+      var subject = encodeURIComponent("Winner's Spotlight – Founding Application");
+      var body = encodeURIComponent(lines.join('\n'));
+      var mailto = 'mailto:info@puntersassociation.co.za?subject=' + subject + '&body=' + body;
+      // Open in new tab to avoid losing the page
+      var a = document.createElement('a');
+      a.href = mailto;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // Show success state
+    form.style.display = 'none';
+    document.getElementById('formHeader').style.display = 'none';
+    success.style.display = 'block';
+    success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  /* ── FOOTER YEAR ── */
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
 </script>
 </body>
 </html>
