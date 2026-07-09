@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Spark — an endless art-prompt generator for artists. Mix hundreds of characters (anime, Disney, Pixar, celebrities), hundreds of art styles, and hundreds of scenarios into infinite creative combinations.">
+<title>Spark — The Endless Art Prompt Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg0:#08050f; --bg1:#0e0819; --bg2:#140d24;
+    --panel: rgba(255,255,255,.045);
+    --panel2: rgba(255,255,255,.07);
+    --line: rgba(255,255,255,.10);
+    --line2: rgba(255,255,255,.18);
+    --ink:#f6f3fc; --ink-dim:#bbaee0; --ink-mute:#786c9c;
+    --pink:#ff5fae; --violet:#8b5cf6; --cyan:#3ee6ff; --gold:#ffd166; --lime:#9dff7a;
+    --grad: linear-gradient(120deg,var(--pink),var(--violet) 45%,var(--cyan) 75%,var(--gold));
+  }
+  *,*::before,*::after{ margin:0; padding:0; box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    background: var(--bg0);
+    color: var(--ink);
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:400;
+    line-height:1.6;
+    overflow-x:hidden;
+    position:relative;
+  }
+  ::selection{ background:var(--violet); color:#fff; }
+  h1,h2,h3,.display{ font-family:'Unbounded', sans-serif; }
+  .accent{
+    background:var(--grad);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    background-size:200% 100%;
+    animation: hue-shift 8s ease-in-out infinite;
+  }
+  @keyframes hue-shift{ 0%,100%{background-position:0% 50%;} 50%{background-position:100% 50%;} }
+  .container{ max-width:1180px; margin:0 auto; padding:0 32px; }
+
+  /* ── BACKDROP ── */
+  .backdrop{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+  .blob{ position:absolute; border-radius:50%; filter:blur(90px); opacity:.35; }
+  .blob.b1{ width:520px; height:520px; background:var(--pink); top:-120px; left:-100px; animation: drift1 22s ease-in-out infinite; }
+  .blob.b2{ width:600px; height:600px; background:var(--violet); top:20%; right:-180px; animation: drift2 26s ease-in-out infinite; }
+  .blob.b3{ width:460px; height:460px; background:var(--cyan); bottom:-140px; left:10%; animation: drift3 20s ease-in-out infinite; }
+  .blob.b4{ width:380px; height:380px; background:var(--gold); bottom:5%; right:12%; opacity:.22; animation: drift1 30s ease-in-out infinite reverse; }
+  @keyframes drift1{ 0%,100%{transform:translate(0,0);} 50%{transform:translate(60px,40px);} }
+  @keyframes drift2{ 0%,100%{transform:translate(0,0);} 50%{transform:translate(-50px,60px);} }
+  @keyframes drift3{ 0%,100%{transform:translate(0,0);} 50%{transform:translate(40px,-50px);} }
+  .noise{
+    position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.4;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  }
+  #sparkfield{ position:fixed; inset:0; z-index:1; pointer-events:none; }
+  .twinkle{
+    position:absolute; width:3px; height:3px; border-radius:50%;
+    background:#fff; opacity:0; animation: twinkle 3.5s ease-in-out infinite;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:0; transform:scale(.5);} 50%{opacity:.9; transform:scale(1.4);} }
+
+  section, header, footer{ position:relative; z-index:2; }
+
+  /* ── NAV ── */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 32px;
+    background:rgba(8,5,15,.7); backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; }
+  .brand-mark{ font-size:22px; }
+  .brand-name{ font-family:'Unbounded',sans-serif; font-weight:800; font-size:16px; letter-spacing:.5px; color:var(--ink); }
+  .nav-links{ display:flex; gap:28px; list-style:none; align-items:center; }
+  .nav-links a{ font-size:13.5px; color:var(--ink-dim); text-decoration:none; transition:color .2s; }
+  .nav-links a:hover{ color:#fff; }
+  .nav-cta{
+    font-size:13px; font-weight:600; color:var(--bg0)!important;
+    background:var(--grad); background-size:200% 100%;
+    padding:10px 20px; border-radius:100px; text-decoration:none;
+    transition:transform .15s, background-position .4s;
+  }
+  .nav-cta:hover{ transform:translateY(-1px); background-position:100% 0; }
+
+  /* ── HERO ── */
+  .hero{ min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:150px 0 90px; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:12px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--gold); border:1px solid var(--line2); border-radius:100px;
+    padding:7px 16px; margin-bottom:28px; background:var(--panel);
+  }
+  .hero h1{ font-size:clamp(38px,6.2vw,74px); font-weight:800; line-height:1.06; max-width:920px; margin-bottom:22px; }
+  .hero-sub{ font-size:17px; color:var(--ink-dim); max-width:600px; margin-bottom:38px; line-height:1.75; }
+  .hero-actions{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:64px; }
+  .btn{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px;
+    padding:15px 30px; border-radius:100px; border:none; cursor:pointer;
+    text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+    transition:transform .15s, box-shadow .2s;
+  }
+  .btn-glow{ color:#160b26; background:var(--grad); background-size:200% 100%; box-shadow:0 8px 30px -8px rgba(139,92,246,.6); }
+  .btn-glow:hover{ transform:translateY(-2px); background-position:100% 0; }
+  .btn-ghost{ color:var(--ink); background:var(--panel); border:1px solid var(--line2); }
+  .btn-ghost:hover{ border-color:var(--ink-dim); transform:translateY(-2px); }
+  .hero-stats{ display:flex; gap:44px; flex-wrap:wrap; padding-top:36px; border-top:1px solid var(--line); }
+  .stat-num{ font-family:'Unbounded',sans-serif; font-weight:800; font-size:32px; color:var(--ink); }
+  .stat-label{ font-size:11.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-mute); margin-top:4px; }
+
+  /* ── SECTION HEAD ── */
+  .section-tag{ font-size:11.5px; letter-spacing:2.5px; text-transform:uppercase; color:var(--pink); margin-bottom:12px; font-weight:600; }
+  .section-title{ font-size:clamp(28px,3.6vw,44px); font-weight:800; line-height:1.12; margin-bottom:16px; }
+  .section-sub{ font-size:15px; color:var(--ink-dim); max-width:600px; line-height:1.7; }
+  section.pad{ padding:110px 0; }
+
+  /* ── GENERATOR ── */
+  .gen-wrap{
+    margin-top:56px; background:linear-gradient(180deg, var(--panel2), var(--panel));
+    border:1px solid var(--line2); border-radius:28px; padding:44px;
+    position:relative; overflow:hidden;
+  }
+  .gen-wrap::before{
+    content:''; position:absolute; top:-2px; left:0; right:0; height:3px;
+    background:var(--grad); background-size:200% 100%; animation:hue-shift 6s linear infinite;
+  }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:32px; }
+  .chip{
+    font-size:12.5px; font-weight:500; padding:8px 16px; border-radius:100px;
+    background:var(--panel); border:1px solid var(--line2); color:var(--ink-dim);
+    cursor:pointer; transition:all .2s; user-select:none;
+  }
+  .chip.active{ background:rgba(255,255,255,.14); color:#fff; border-color:var(--ink-dim); }
+  .chip .dot{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:7px; }
+  .slots{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:14px; }
+  .slots.with-twist{ grid-template-columns:repeat(4,1fr); }
+  .slot{
+    background:var(--bg1); border:1px solid var(--line); border-radius:18px;
+    padding:24px 20px 20px; min-height:168px; display:flex; flex-direction:column;
+    position:relative; overflow:hidden;
+  }
+  .slot-label{ font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+  .slot-tag{
+    font-size:9.5px; letter-spacing:1px; text-transform:uppercase; padding:3px 9px; border-radius:100px;
+    background:rgba(255,255,255,.08); color:var(--ink-dim);
+  }
+  .slot-value{ font-family:'Unbounded',sans-serif; font-size:19px; font-weight:600; line-height:1.3; color:#fff; flex:1; display:flex; align-items:center; }
+  .slot-value.rolling{ animation:rollFade .28s ease; }
+  @keyframes rollFade{ 0%{opacity:0; transform:translateY(6px);} 100%{opacity:1; transform:translateY(0);} }
+  .lock-btn{
+    position:absolute; top:16px; right:16px; width:30px; height:30px; border-radius:50%;
+    background:rgba(255,255,255,.06); border:1px solid var(--line2); color:var(--ink-dim);
+    cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center;
+    transition:all .2s;
+  }
+  .lock-btn.locked{ background:var(--gold); color:#251a00; border-color:var(--gold); }
+  .gen-actions{ display:flex; flex-wrap:wrap; gap:14px; justify-content:center; margin:32px 0 28px; }
+  .btn-big{ font-size:16px; padding:18px 42px; }
+  .prompt-box{
+    background:var(--bg1); border:1px solid var(--line2); border-radius:16px; padding:26px 28px;
+    display:flex; gap:18px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+  }
+  .prompt-text{ font-family:'Caveat', cursive; font-size:24px; color:#fff; line-height:1.5; flex:1; min-width:240px; }
+  .prompt-actions{ display:flex; gap:10px; flex-shrink:0; }
+  .icon-btn{
+    background:var(--panel); border:1px solid var(--line2); color:var(--ink); font-size:13px; font-weight:600;
+    padding:10px 16px; border-radius:100px; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:6px;
+  }
+  .icon-btn:hover{ background:var(--panel2); transform:translateY(-1px); }
+  .combo-note{ text-align:center; font-size:12px; color:var(--ink-mute); margin-top:22px; }
+
+  /* sparkle burst */
+  .burst{ position:fixed; pointer-events:none; z-index:500; }
+  .burst span{
+    position:absolute; width:6px; height:6px; border-radius:50%;
+    animation: burst-out .8s ease-out forwards;
+  }
+  @keyframes burst-out{
+    0%{ transform:translate(0,0) scale(1); opacity:1; }
+    100%{ transform:translate(var(--dx),var(--dy)) scale(0); opacity:0; }
+  }
+
+  /* ── FAVORITES ── */
+  .fav-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; margin-top:36px; }
+  .fav-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px;
+    position:relative; transition:border-color .2s;
+  }
+  .fav-card:hover{ border-color:var(--line2); }
+  .fav-text{ font-size:13.5px; color:var(--ink-dim); line-height:1.6; margin-bottom:10px; padding-right:22px; }
+  .fav-remove{
+    position:absolute; top:14px; right:14px; background:none; border:none; color:var(--ink-mute);
+    cursor:pointer; font-size:15px; line-height:1;
+  }
+  .fav-remove:hover{ color:var(--pink); }
+  .fav-load{ font-size:11.5px; color:var(--cyan); background:none; border:none; cursor:pointer; padding:0; font-weight:600; }
+  .fav-empty{ color:var(--ink-mute); font-size:14px; text-align:center; padding:40px 0; }
+
+  /* ── PHILOSOPHY ── */
+  .philo-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:56px; }
+  .philo-card{ background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:30px 26px; }
+  .philo-icon{ font-size:28px; margin-bottom:16px; }
+  .philo-title{ font-family:'Unbounded',sans-serif; font-size:16px; font-weight:600; margin-bottom:10px; }
+  .philo-body{ font-size:13.5px; color:var(--ink-dim); line-height:1.7; }
+
+  /* ── VAULT ── */
+  .vault-tabs{ display:flex; gap:10px; margin:36px 0 24px; flex-wrap:wrap; }
+  .vault-tab{
+    font-size:13px; font-weight:600; padding:10px 20px; border-radius:100px;
+    background:var(--panel); border:1px solid var(--line2); color:var(--ink-dim); cursor:pointer;
+  }
+  .vault-tab.active{ background:#fff; color:#160b26; border-color:#fff; }
+  .vault-panel{ display:none; }
+  .vault-panel.active{ display:block; }
+  .vault-chips{
+    display:flex; flex-wrap:wrap; gap:9px; max-height:340px; overflow-y:auto;
+    padding:22px; background:var(--bg1); border:1px solid var(--line); border-radius:16px;
+  }
+  .vault-chips span{
+    font-size:12px; padding:7px 13px; border-radius:100px; background:var(--panel); color:var(--ink-dim);
+    border:1px solid var(--line);
+  }
+  .vault-chips::-webkit-scrollbar{ width:8px; }
+  .vault-chips::-webkit-scrollbar-thumb{ background:var(--line2); border-radius:8px; }
+
+  /* ── FAQ ── */
+  .faq-list{ max-width:760px; margin:48px auto 0; }
+  .faq-item{ border-bottom:1px solid var(--line); }
+  .faq-q{
+    width:100%; background:none; border:none; text-align:left; padding:22px 0;
+    font-family:'Space Grotesk',sans-serif; font-size:15.5px; font-weight:600; color:var(--ink);
+    cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:16px;
+  }
+  .faq-q:hover{ color:var(--cyan); }
+  .faq-icon{
+    width:26px; height:26px; border:1px solid var(--line2); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--ink-dim);
+    flex-shrink:0; transition:transform .3s;
+  }
+  .faq-item.open .faq-icon{ transform:rotate(45deg); }
+  .faq-a{ max-height:0; overflow:hidden; transition:max-height .35s ease, padding .3s ease; font-size:14px; color:var(--ink-dim); line-height:1.7; }
+  .faq-item.open .faq-a{ max-height:220px; padding-bottom:22px; }
+
+  /* ── FOOTER ── */
+  footer{ border-top:1px solid var(--line); padding:56px 0 32px; text-align:center; }
+  .footer-mark{ font-family:'Unbounded',sans-serif; font-weight:800; font-size:18px; margin-bottom:10px; }
+  .footer-note{ font-size:13px; color:var(--ink-mute); max-width:440px; margin:0 auto 20px; line-height:1.7; }
+  .footer-copy{ font-size:11.5px; color:var(--ink-mute); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width:900px){
+    .slots{ grid-template-columns:1fr; }
+    .slots.with-twist{ grid-template-columns:1fr; }
+    .philo-grid{ grid-template-columns:1fr; }
+    .hero-stats{ gap:28px; }
+  }
+  @media (max-width:768px){
+    .nav-links{ gap:0; }
+    .nav-links li:not(:last-child){ display:none; }
+    .container{ padding:0 20px; }
+    .hero{ padding:130px 0 60px; }
+    .gen-wrap{ padding:26px 18px; border-radius:20px; }
+    section.pad{ padding:72px 0; }
+    .prompt-box{ flex-direction:column; align-items:stretch; }
+  }
+</style>
+</head>
+<body>
+
+<div class="backdrop" aria-hidden="true">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="blob b4"></div>
+</div>
+<div class="noise" aria-hidden="true"></div>
+<div id="sparkfield" aria-hidden="true"></div>
+
+<nav>
+  <a href="#top" class="brand">
+    <span class="brand-mark">✨</span>
+    <span class="brand-name">SPARK</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#generator">Generator</a></li>
+    <li><a href="#favorites">Favorites</a></li>
+    <li><a href="#vault">The Vault</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#generator" class="nav-cta">Start sparking</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="container">
+    <div class="eyebrow">✦ Endless art prompts for restless imaginations</div>
+    <h1>Never face a<br><span class="accent">blank canvas</span> again.</h1>
+    <p class="hero-sub">Spark smashes together hundreds of characters, art styles, and scenarios into a single wild idea — built for artists who create by breaking the rules, not following them. Roll one, lock what you love, remix the rest.</p>
+    <div class="hero-actions">
+      <a href="#generator" class="btn btn-glow">✨ Generate my spark</a>
+      <a href="#vault" class="btn btn-ghost">Browse the vault</a>
+    </div>
+    <div class="hero-stats" role="list">
+      <div role="listitem"><div class="stat-num" id="statChars">0</div><div class="stat-label">Characters</div></div>
+      <div role="listitem"><div class="stat-num" id="statStyles">0</div><div class="stat-label">Art styles</div></div>
+      <div role="listitem"><div class="stat-num" id="statActions">0</div><div class="stat-label">Scenarios</div></div>
+      <div role="listitem"><div class="stat-num" id="statCombos">0</div><div class="stat-label">Possible sparks</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- GENERATOR -->
+<section class="pad" id="generator">
+  <div class="container">
+    <div class="section-tag">The generator</div>
+    <h2 class="section-title">Roll the dice on your<br><span class="accent">next masterpiece</span>.</h2>
+    <p class="section-sub">Pick your character pool, hit generate, and lock any slot you want to keep. Everything else stays fair game.</p>
+
+    <div class="gen-wrap">
+      <div class="chip-row" id="categoryChips" role="group" aria-label="Character category filters"></div>
+
+      <div class="slots" id="slotsRow">
+        <div class="slot" data-slot="character">
+          <div class="slot-label">Who <span class="slot-tag" id="charTag">—</span></div>
+          <div class="slot-value" id="charValue">Hit generate to begin</div>
+          <button class="lock-btn" data-lock="character" aria-label="Lock character" title="Lock this slot">🔓</button>
+        </div>
+        <div class="slot" data-slot="style">
+          <div class="slot-label">In this style</div>
+          <div class="slot-value" id="styleValue">—</div>
+          <button class="lock-btn" data-lock="style" aria-label="Lock style" title="Lock this slot">🔓</button>
+        </div>
+        <div class="slot" data-slot="action">
+          <div class="slot-label">Doing this</div>
+          <div class="slot-value" id="actionValue">—</div>
+          <button class="lock-btn" data-lock="action" aria-label="Lock action" title="Lock this slot">🔓</button>
+        </div>
+        <div class="slot" data-slot="twist" id="twistSlot">
+          <div class="slot-label">Wildcard twist</div>
+          <div class="slot-value" id="twistValue">—</div>
+          <button class="lock-btn" data-lock="twist" aria-label="Lock twist" title="Lock this slot">🔓</button>
+        </div>
+      </div>
+
+      <div class="chip-row" style="justify-content:center;">
+        <div class="chip active" id="twistToggle" role="button" tabindex="0">🎲 Include wildcard twist</div>
+      </div>
+
+      <div class="gen-actions">
+        <button class="btn btn-glow btn-big" id="generateBtn">✨ Generate my spark</button>
+        <button class="btn btn-ghost" id="rerollAllBtn">🔀 Reroll everything</button>
+        <button class="btn btn-ghost" id="saveFavBtn">⭐ Save this spark</button>
+      </div>
+
+      <div class="prompt-box">
+        <div class="prompt-text" id="promptText">Your spark will appear here — a full sentence ready to paste into your sketchbook or prompt box.</div>
+        <div class="prompt-actions">
+          <button class="icon-btn" id="copyBtn">📋 Copy</button>
+        </div>
+      </div>
+
+      <div class="combo-note" id="comboNote"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAVORITES -->
+<section class="pad" id="favorites">
+  <div class="container">
+    <div class="section-tag">Your collection</div>
+    <h2 class="section-title">Sparks worth <span class="accent">keeping</span>.</h2>
+    <p class="section-sub">Save any combination you love. It's stored right here in your browser — nowhere else.</p>
+    <div class="fav-grid" id="favGrid"></div>
+  </div>
+</section>
+
+<!-- PHILOSOPHY -->
+<section class="pad">
+  <div class="container">
+    <div class="section-tag">Why Spark exists</div>
+    <h2 class="section-title">Rules are just the first<br><span class="accent">draft</span>.</h2>
+    <p class="section-sub">Spark isn't here to give you an assignment — it's here to hand you a match. What you do with the fire is entirely yours.</p>
+    <div class="philo-grid">
+      <div class="philo-card">
+        <div class="philo-icon">🧩</div>
+        <div class="philo-title">Combine anything</div>
+        <div class="philo-body">Anime hero meets Renaissance oil painting meets skateboarding — the weirder the mashup, the better the art. Nothing here is meant to be taken literally.</div>
+      </div>
+      <div class="philo-card">
+        <div class="philo-icon">🔓</div>
+        <div class="philo-title">Lock what sparks joy</div>
+        <div class="philo-body">Love the style but not the pose? Lock the style, reroll the rest. Spark bends to your process, not the other way around.</div>
+      </div>
+      <div class="philo-card">
+        <div class="philo-icon">🚀</div>
+        <div class="philo-title">Break the boundary</div>
+        <div class="philo-body">Every prompt is a launchpad, not a leash. Swap the character for your OC, mix two styles, ignore the action entirely — that's the whole point.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VAULT -->
+<section class="pad" id="vault">
+  <div class="container">
+    <div class="section-tag">The vault</div>
+    <h2 class="section-title">Everything that could <span class="accent">show up</span>.</h2>
+    <p class="section-sub">A peek at the full pool feeding your sparks — anime icons, Disney and Pixar royalty, real-world legends, original archetypes, art movements, aesthetics, and scenarios.</p>
+    <div class="vault-tabs" id="vaultTabs">
+      <div class="vault-tab active" data-vault="character">Characters</div>
+      <div class="vault-tab" data-vault="style">Art styles</div>
+      <div class="vault-tab" data-vault="action">Scenarios</div>
+      <div class="vault-tab" data-vault="twist">Wildcard twists</div>
+    </div>
+    <div class="vault-panel active" id="vault-character"><div class="vault-chips" id="vaultChars"></div></div>
+    <div class="vault-panel" id="vault-style"><div class="vault-chips" id="vaultStyles"></div></div>
+    <div class="vault-panel" id="vault-action"><div class="vault-chips" id="vaultActions"></div></div>
+    <div class="vault-panel" id="vault-twist"><div class="vault-chips" id="vaultTwists"></div></div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="pad" id="faq">
+  <div class="container">
+    <div class="section-tag" style="text-align:center;">Questions</div>
+    <h2 class="section-title" style="text-align:center;">Everything you need <span class="accent">to know</span>.</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          Who is Spark for?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">Artists, illustrators, animators, cosplayers, writers, and anyone who creates — especially on the days your imagination feels empty. Spark exists to hand you a starting point, not a finished idea.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          Do I have to draw exactly what it generates?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">Never. Treat every result as raw material. Swap the character for your own OC, blend two styles together, reinterpret the scenario however you like. The generator's job is to break your stillness, not dictate your art.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          Can I control which characters show up?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">Yes — use the category chips above the generator to include or exclude Anime, Disney, Pixar, Celebrity, and Original archetypes. Turn off anything you're not in the mood for.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          Where are my favorites saved?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">Locally, in your browser's storage only. Nothing is sent anywhere, no account required, and no one else can see your saved sparks.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+          Will more characters, styles, and scenarios be added?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">The vault is built to grow. New characters, art movements, aesthetics, and scenarios get folded in over time — so the pool of possible sparks only gets bigger.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-mark">✨ SPARK</div>
+    <p class="footer-note">Built for the artists who create by breaking boundaries. No sign-up, no tracking, no rules — just infinite starting points.</p>
+    <div class="footer-copy">© <span id="year"></span> Spark. Made for makers.</div>
+  </div>
+</footer>
+
+<script>
+/* ================= DATA ================= */
+const ANIME = ["Naruto Uzumaki","Sasuke Uchiha","Sakura Haruno","Kakashi Hatake","Itachi Uchiha","Gaara","Rock Lee","Hinata Hyuga","Monkey D. Luffy","Roronoa Zoro","Nami","Sanji","Tony Tony Chopper","Nico Robin","Franky","Brook","Portgas D. Ace","Shanks","Son Goku","Vegeta","Bulma","Piccolo","Gohan","Trunks","Frieza","Cell","Majin Buu","Edward Elric","Alphonse Elric","Roy Mustang","Winry Rockbell","Levi Ackerman","Eren Yeager","Mikasa Ackerman","Armin Arlert","Historia Reiss","Erwin Smith","Light Yagami","L Lawliet","Misa Amane","Ryuk","Tanjiro Kamado","Nezuko Kamado","Zenitsu Agatsuma","Inosuke Hashibira","Giyu Tomioka","Shinobu Kocho","Izuku Midoriya","Katsuki Bakugo","Ochaco Uraraka","Shoto Todoroki","All Might","Tomura Shigaraki","Eijiro Kirishima","Tsuyu Asui","Sailor Moon","Sailor Mars","Sailor Mercury","Sailor Venus","Sailor Jupiter","Tuxedo Mask","Chibiusa","Spike Spiegel","Faye Valentine","Jet Black","Radical Edward","Vash the Stampede","Alucard","Integra Hellsing","Seras Victoria","Lelouch Lamperouge","C.C.","Suzaku Kururugi","Rem","Ram","Emilia","Subaru Natsuki","Megumin","Aqua","Kazuma Satou","Darkness","Asuka Langley Soryu","Rei Ayanami","Shinji Ikari","Misato Katsuragi","Kaworu Nagisa","Killua Zoldyck","Gon Freecss","Kurapika","Leorio Paladiknight","Hisoka Morow","Denji","Power","Aki Hayakawa","Makima","Anya Forger","Loid Forger","Yor Forger","Violet Evergarden","Howl Jenkins Pendragon","Sophie Hatter","Chihiro Ogino","Haku","No-Face","Totoro","Kiki","San (Princess Mononoke)","Ashitaka","Nausicaä","Astolfo","Rin Tohsaka","Saber","Archer (Fate)","Shirou Emiya","Yuno Gasai","Yukiteru Amano","Usagi Tsukino","Homura Akemi","Madoka Kaname","Kyubey","Sakura Kinomoto","Syaoran Li","Ichigo Kurosaki","Rukia Kuchiki","Toshiro Hitsugaya","Orihime Inoue","Natsu Dragneel","Lucy Heartfilia","Erza Scarlet","Meliodas","Elizabeth Liones","Escanor","Yusuke Urameshi","Hiei","Inuyasha","Kagome Higurashi","Sesshomaru","Kenshin Himura","Yugi Muto","Seto Kaiba","Pikachu","Ash Ketchum","Misty","Mewtwo","Lucario","Astro Boy","Doraemon","Conan Edogawa","Kenshiro","Mob (Shigeo Kageyama)","Reigen Arataka","Saitama","Genos","Tatsumaki","Anos Voldigoad","Rimuru Tempest","Milim Nava","Ai Hoshino","Chika Fujiwara","Kaguya Shinomiya","Miyuki Shirogane","Kaneki Ken","Touka Kirishima","Simon","Kamina","Yoko Littner","Edward Newgate (Whitebeard)","Trafalgar Law","Boa Hancock","Donquixote Doflamingo","David Martinez","Lucy (Cyberpunk Edgerunners)","Rebecca (Cyberpunk Edgerunners)","Sung Jin-Woo"];
+const DISNEY = ["Mickey Mouse","Minnie Mouse","Donald Duck","Daisy Duck","Goofy","Pluto","Elsa","Anna","Olaf","Kristoff","Sven","Ariel","King Triton","Ursula","Prince Eric","Flounder","Sebastian","Belle","Beast (Prince Adam)","Gaston","Lumiere","Cogsworth","Mrs. Potts","Chip","Aladdin","Princess Jasmine","Genie","Jafar","Abu","Iago","Simba","Nala","Mufasa","Scar","Timon","Pumbaa","Rafiki","Pocahontas","John Smith","Mulan","Mushu","Li Shang","Snow White","Cinderella","Prince Charming","Fairy Godmother","Princess Aurora","Maleficent","Prince Phillip","Tiana","Prince Naveen","Dr. Facilier","Rapunzel","Flynn Rider","Mother Gothel","Pascal","Maximus","Moana","Maui","Merida","Queen Elinor","Judy Hopps","Nick Wilde","Baymax","Hiro Hamada","Peter Pan","Tinker Bell","Captain Hook","Wendy Darling","Alice","Mad Hatter","Cheshire Cat","Queen of Hearts","White Rabbit","Dumbo","Bambi","Thumper","Lady","Tramp","Cruella de Vil","Pongo","Perdita","Robin Hood","Winnie the Pooh","Tigger","Piglet","Eeyore","Stitch","Lilo","Hercules","Megara","Hades","Pegasus","Hans (Frozen)","Mirabel Madrigal","Bruno Madrigal","Isabela Madrigal","Luisa Madrigal","Abuela Alma","Asha","Star (Wish)","King Magnifico","Kuzco","Pacha","Yzma","Kronk","Tarzan","Jane Porter","Wreck-It Ralph","Vanellope von Schweetz"];
+const PIXAR = ["Woody","Buzz Lightyear","Jessie","Rex","Mr. Potato Head","Slinky Dog","Hamm","Bullseye","Lotso","Sulley","Mike Wazowski","Boo","Randall Boggs","Celia Mae","Nemo","Marlin","Dory","Bruce the Shark","Crush","Squirt","Hank the Octopus","Lightning McQueen","Mater","Sally Carrera","Doc Hudson","Remy","Linguini","Colette","WALL-E","EVE","Carl Fredricksen","Russell","Dug","Kevin the Bird","Riley Andersen","Joy","Sadness","Anger","Fear","Disgust","Anxiety","Miguel Rivera","Hector","Ernesto de la Cruz","Dante","Arlo","Spot","Bing Bong","Luca Paguro","Alberto Scorfano","Giulia Marcovaldo","Mei Lee","Ming Lee","Joe Gardner","22","Ember Lumen","Wade Ripple"];
+const CELEBRITY = ["Taylor Swift","Beyoncé","Rihanna","Ariana Grande","Billie Eilish","Dua Lipa","Zendaya","Timothée Chalamet","Tom Holland","Dwayne Johnson","Keanu Reeves","Chris Hemsworth","Robert Downey Jr.","Scarlett Johansson","Margot Robbie","Emma Watson","Leonardo DiCaprio","Brad Pitt","Angelina Jolie","Jennifer Lawrence","Meryl Streep","Denzel Washington","Will Smith","Morgan Freeman","Oprah Winfrey","Michael Jackson","Elvis Presley","Freddie Mercury","David Bowie","Prince","Madonna","Lady Gaga","Harry Styles","Jungkook","V (BTS)","Lisa (Blackpink)","Bad Bunny","Shakira","Selena Gomez","Justin Bieber","Ed Sheeran","Adele","Bruno Mars","The Weeknd","Kanye West","Drake","Cristiano Ronaldo","Lionel Messi","LeBron James","Michael Jordan","Serena Williams","Simone Biles","Usain Bolt","Muhammad Ali","Albert Einstein","Marilyn Monroe","Audrey Hepburn","Charlie Chaplin","Bruce Lee","Jackie Chan","Zoe Saldaña","Tom Cruise","Johnny Depp","Emma Stone","Anne Hathaway","Priyanka Chopra","Shah Rukh Khan","Rowan Atkinson (Mr. Bean)","Whitney Houston","Amy Winehouse","Bob Marley","John Lennon","Elton John","Stevie Wonder","Frida Kahlo","Salvador Dalí","Steve Jobs","Nikola Tesla","Marie Curie","Cleopatra","Abraham Lincoln","Mahatma Gandhi","Nelson Mandela","Martin Luther King Jr.","Amelia Earhart"];
+const ORIGINAL = ["A mysterious hooded stranger","Your original character (OC)","A sentient robot discovering emotions","The last dragon rider","A retired superhero living quietly","An alien exchange student","A time-traveling detective","The ghost of a forgotten queen","A cursed knight who cannot remove their armor","A shape-shifting fox spirit","A rogue AI who wants to paint","A witch running a flower shop","A vampire barista","A pirate captain who fears water","A knight afraid of dragons","A wizard who lost their magic","A superhero on their day off","A villain having a redemption arc","A robot learning to dance","A mermaid who wants legs","A ghost haunting a coffee shop","A dragon who collects books instead of gold","An angel moonlighting as a bartender","A demon running a bakery","A god bored of immortality","A fairy who hates flowers","A giant who's afraid of heights","A cyborg searching for their humanity","A clone questioning their identity","A sidekick stepping into the spotlight","An ordinary person who just found magical powers","A monster who just wants a friend","A knight errant seeking a lost kingdom","A star fallen to earth as a human","The last survivor of a fantasy apocalypse","A masked vigilante unmasking for the first time"];
+
+const STYLES = ["Watercolor painting","Oil painting","Acrylic painting","Gouache painting","Pastel drawing","Charcoal sketch","Ink wash painting","Pen and ink illustration","Colored pencil art","Crayon art","Chalk art","Woodblock print (Ukiyo-e)","Linocut print","Screen printing","Etching","Lithography","Stained glass art","Mosaic art","Fresco painting","Tempera painting","Encaustic wax painting","Airbrush art","Spray paint graffiti art","Street art mural style","Sumi-e ink painting","Gongbi fine line painting","Mughal miniature painting","Byzantine icon style","Renaissance style","Baroque style","Rococo style","Neoclassical style","Romanticism","Realism","Impressionism","Post-Impressionism","Pointillism","Fauvism","Expressionism","Cubism","Futurism","Dadaism","Surrealism","Abstract Expressionism","Minimalism","Pop Art","Op Art","Art Nouveau","Art Deco","Bauhaus style","De Stijl","Constructivism","Suprematism","Precisionism","Photorealism","Hyperrealism","Naive folk art","Outsider art","Low-brow pop surrealism","Vaporwave aesthetic","Synthwave retrowave","Cyberpunk aesthetic","Steampunk aesthetic","Dieselpunk aesthetic","Solarpunk aesthetic","Biopunk aesthetic","Atompunk aesthetic","Cottagecore aesthetic","Dark academia aesthetic","Light academia aesthetic","Goblincore aesthetic","Fairycore aesthetic","Kidcore aesthetic","Glitch art","Vector art","Flat design illustration","Isometric illustration","Low poly 3D art","Voxel art","Pixel art 8-bit","Pixel art 16-bit","Claymation style","Stop-motion style","Paper cutout collage art","Origami-inspired art","Chibi style","Kawaii style","Anime cel-shaded style","Manga black-and-white style","Shoujo manga style","Shonen manga style","Studio Ghibli style","Disney Renaissance animation style","Classic Disney 2D animation style","Pixar 3D animation style","DreamWorks animation style","Cartoon Network style","Adult Swim style","Looney Tunes style","Rubber hose animation style","Saturday morning cartoon style","American comic book style","Manhwa style","Manhua style","Noir comic style","Silver Age comic style","Golden Age comic style","Underground comix style","Graphic novel style","Editorial caricature style","Political cartoon style","Tattoo flash art style","American traditional tattoo style","Japanese Irezumi tattoo style","Neo-traditional tattoo style","Blackwork tattoo style","Fine line tattoo style","Sticker decal style","Emoji-style illustration","Icon design style","Continuous line art","Blind contour drawing","Gesture drawing","Figure study sketch","Anatomical illustration style","Botanical illustration style","Scientific illustration style","Medical illustration style","Architectural blueprint style","Technical schematic style","Infographic style","Storyboard sketch style","Film concept art style","Character turnaround sheet style","Environment concept art style","Matte painting style","Soft digital painting","Painterly digital painting","Octane 3D render style","Pixar-quality 3D render","Photobashing style","Photo manipulation collage","Double exposure photo style","Vintage sepia photograph style","Black and white film noir style","Polaroid photo style","Daguerreotype style","Cyanotype print style","Risograph print style","Halftone print style","Newspaper print style","Silkscreen poster style","Vintage travel poster style","Propaganda poster style","WPA poster style","Psychedelic 60s poster art","Blacklight poster art","Album cover art style","Vaporwave album art","Y2K aesthetic","90s grunge aesthetic","80s neon aesthetic","70s groovy aesthetic","60s mod aesthetic","50s pin-up style","Victorian illustration style","Edwardian illustration style","Medieval illuminated manuscript style","Gothic cathedral art style","Egyptian hieroglyph style","Mesopotamian relief style","Greek black-figure pottery style","Greek red-figure pottery style","Roman mosaic style","Celtic knotwork style","Norse Viking art style","Aztec art style","Mayan art style","Native American ledger art style","African tribal mask art style","Aboriginal dot painting style","Indian miniature painting style","Persian miniature style","Islamic geometric pattern art","Arabesque ornamental style","Chinese brush painting style","Japanese woodblock style","Korean Minhwa folk painting style","Tibetan thangka painting style","Balinese painting style","Aboriginal bark painting style","Fantasy book cover illustration","Sci-fi pulp cover illustration","Young adult novel cover style","Children's picture book illustration","Fairy tale illustration style","Whimsical storybook style","Dark fantasy illustration style","High fantasy oil painting style","Grimdark illustration style","Cosmic horror Lovecraftian style","Gothic horror illustration style","Slasher movie poster style","Retro video game box art style","AAA video game concept art","Retro arcade cabinet art","Fighting game character art style","JRPG sprite art style","Visual novel illustration style","Trading card game illustration style","Tarot card illustration style","Zodiac astrology illustration style","Alchemical illustration style","Occult grimoire illustration style","Botanical fantasy style","Bioluminescent fantasy art","Dreamcore aesthetic","Weirdcore aesthetic","Liminal space aesthetic","Analog horror aesthetic","VHS glitch aesthetic","CRT scanline aesthetic","Holographic foil art style","Iridescent opalescent rendering","Chrome liquid metal render","Glass bubble render style","Crystal gem render style","Neon sign illustration style","Sketchbook doodle style","Copic marker illustration style","Alcohol ink art style","Fluid acrylic pour art","Splatter paint action-painting style","Palette knife impasto style","Monochrome grayscale illustration","Duotone illustration","Triadic color scheme illustration","Complementary color scheme art","Analogous color scheme art","Pastel color palette illustration","Neon color palette illustration","Earth tone illustration","Muted vintage color palette","High contrast noir palette","Gradient mesh illustration","Retro halftone comic dots","Claymation diorama style","Felt plush toy render style","Knitted crochet texture render","Embroidery stitched art style","Quilling paper art style","Sand art style","Chalk sidewalk art style","Ice sculpture render style","Balloon animal render style","Vector flat icon set style","Material design illustration","Skeuomorphic design style","Brutalist web design aesthetic","Memphis design style","Swiss International Typographic style","Retro sci-fi diagram style","Blueprint patent drawing style","NASA retro poster style","Space age atomic style","Cassette futurism","Analog synth aesthetic","Chiptune album art style","Lo-fi hip hop album art style","Anime title-card style","Kinetic typography poster style","Graffiti bubble letter style","Wildstyle graffiti lettering","Stencil street art style","Airbrushed van mural style","Lowrider art style","Chicano art style","Skateboard deck art style","Surf culture illustration style","Punk zine collage style","Cyber-goth aesthetic","Pastel goth aesthetic","E-girl e-boy aesthetic","Y2K chrome aesthetic","Barbiecore aesthetic","Balletcore aesthetic","Mermaidcore aesthetic","Angelcore aesthetic","Witchcore aesthetic","Cabincore aesthetic","Farmcore aesthetic","Royalcore aesthetic","Piratecore aesthetic","Circuscore aesthetic","Clowncore aesthetic","Vintage circus poster style","Vintage fortune teller poster style","Dia de los Muertos art style","Gothic Victorian mourning art","Dutch Golden Age painting style","Sistine Chapel-inspired fresco style","Trompe-l'oeil illusion style","Anamorphic chalk art","Kaleidoscope pattern art","Fractal art style","Generative art style","Algorithmic pattern art","Data visualization art style","ASCII art style","3D wireframe render","Cel-shaded 3D render","Toon-shaded game render","Watercolor anime background style","Ghibli background painting style","Miyazaki matte painting style","Retro Pokémon card art style","Trading card splash art style","Fantasy RPG splash art","MOBA splash art style","Battle royale skin art style","Gacha game splash art","Studio Trigger dynamic anime style","Studio MAPPA anime style","Makoto Shinkai backdrop style","Satoshi Kon surreal anime style","Bauhaus poster style","Ligne claire comic style","Chibi keychain art style"];
+
+const ACTIONS = ["sipping a cup of coffee at a rainy window","dancing under the stars","fighting a giant dragon","riding a motorcycle through neon city streets","casting a powerful spell","practicing sword fighting","cooking a magical feast","baking a towering birthday cake","reading an ancient spellbook by candlelight","sleeping in a treehouse","floating in zero gravity","surfing a giant wave","skateboarding down a mountain","painting a mural on a city wall","playing an electric guitar solo on stage","singing into a vintage microphone","playing chess against a robot","building a sandcastle shaped like a castle","flying on the back of a dragon","piloting a spaceship through an asteroid field","exploring a haunted mansion with a flashlight","discovering a hidden treasure chest","training a baby dragon","taming a wild unicorn","brewing a potion in a cauldron","studying spellcraft in a library","meditating on a mountain peak","practicing yoga on a floating lily pad","ice skating on a frozen lake at night","sledding down a snowy hill","building a snowman with magical powers","having a snowball fight","picnicking in a field of flowers","chasing butterflies in a meadow","climbing a giant beanstalk","escaping a collapsing temple","solving an ancient riddle","deciphering a mysterious map","sailing a pirate ship through a storm","swordfighting on a ship's deck","diving for sunken treasure","swimming with mermaids","riding a giant sea turtle","petting a baby whale","feeding wild birds in a park","walking a giant dog through the city","racing go-karts through a rainbow track","playing an arcade game","competing in an esports tournament","streaming a live gaming session","coding on a laptop covered in stickers","hacking into a mainframe","building a robot in a garage","repairing a broken time machine","traveling through a wormhole","standing at the edge of a black hole","stargazing through a telescope","launching a rocket into space","walking on the moon","planting a flag on Mars","exploring an alien planet","making first contact with aliens","negotiating peace between kingdoms","being crowned as royalty","attending a royal masquerade ball","getting married in a fairy tale wedding","throwing a birthday party","blowing out candles on a cake","opening presents on a holiday morning","decorating a Christmas tree","carving a Halloween pumpkin","trick-or-treating in costume","attending a costume party","cosplaying at a convention","posing for a magazine cover","walking a runway in avant-garde fashion","getting a dramatic makeover","doing a photoshoot in the rain","taking a selfie on a cliff edge","vlogging a travel adventure","backpacking through a jungle","hiking up a snowy peak","camping under a starry sky","roasting marshmallows by a campfire","telling ghost stories around a fire","fishing on a quiet lake at dawn","kayaking down rapids","rock climbing a sheer cliff face","bungee jumping off a bridge","skydiving through clouds","paragliding over mountains","riding a hot air balloon","flying with mechanical wings","gliding on a hoverboard","racing a futuristic car","drifting around a hairpin turn","street racing at midnight","doing tricks on a bike","performing a skateboard grind","doing a backflip off a diving board","competing in a gymnastics routine","practicing ballet at the barre","performing a contemporary dance","breakdancing on cardboard","tap dancing on a stage","playing the violin passionately","conducting an orchestra","composing music at a piano","DJing at a festival","headlining a rock concert","crowd-surfing at a show","busking on a street corner","painting with fire","juggling flaming torches","walking a tightrope","performing a magic trick","pulling a rabbit from a hat","escaping from chains underwater","taming a lion in a circus ring","riding an elephant in a parade","training a falcon to hunt","feeding a baby dragon by hand","hatching from a giant egg","transforming into a superhero","putting on a superhero cape for the first time","saving a city from a monster","battling a giant robot","defending a fortress from invaders","leading an army into battle","storming a castle gate","dueling with lightsabers","blocking an incoming laser blast","teleporting between dimensions","bending fire, water, earth and air","summoning a storm","controlling time itself","shapeshifting into an animal","turning invisible","reading someone's mind","levitating objects with telekinesis","growing to giant size","shrinking down to insect size","talking to animals","riding a giant butterfly","exploring a crystal cave","mining for gemstones","forging a legendary sword","enchanting a magical weapon","restoring an ancient artifact","uncovering a lost civilization","excavating dinosaur bones","studying under a mentor","graduating from wizard school","attending the first day of school nervously","giving a valedictorian speech","winning a science fair","building a volcano diorama","conducting a chemistry experiment","mixing a glowing potion","growing plants in a greenhouse","tending a secret garden","watering a magical flower","harvesting crops at sunset","herding sheep on a hillside","milking a cow on a farm","riding a horse across open plains","racing horses at a derby","training a wild mustang","bonding with a wolf pack","howling at the moon","running through a forest as a wolf","perching on a branch as a bird","soaring above the clouds","diving underwater as a fish","exploring a coral reef","encountering a sea monster","battling a kraken","escaping a whirlpool","surviving a shipwreck","washing ashore on a deserted island","building a raft to escape","signaling a rescue plane","living off the land","foraging for berries","building a fire from scratch","setting up a survival camp","facing off against a bear","outrunning a stampede","taming a dinosaur","riding a T-rex","escaping a volcano eruption","surviving an earthquake","running from a tornado","sheltering from a hurricane","watching the northern lights","chasing a meteor shower","making a wish on a shooting star","catching fireflies in a jar","blowing bubbles at sunset","flying a kite on a windy day","building a treehouse fort","having a pillow fight","building a blanket fort","reading a bedtime story","tucking in for the night","waking up in a fantasy world","falling through a portal","wandering through a dreamscape","getting lost in a hedge maze","escaping a labyrinth","facing a minotaur","outsmarting a sphinx's riddle","charming a genie from a lamp","making a wish come true","granting three wishes","flying on a magic carpet","riding a flying broomstick","brewing tea with a talking teapot","having tea with a mad hatter","falling down a rabbit hole","shrinking after drinking a potion","growing after eating cake","playing croquet with flamingos","painting roses red","racing a white rabbit","attending an unbirthday party","sword fighting a pirate captain","walking the plank","burying treasure on a beach","reading a treasure map by torchlight","discovering a message in a bottle","building a pirate ship model","steering a ship through a storm","commanding a fleet into battle","signing a peace treaty","delivering a rousing speech to troops","training new recruits","standing guard at a castle gate","polishing a suit of armor","sharpening a legendary blade","forging alliances between clans","hosting a royal banquet","serving as a knight in shining armor","slaying a fire-breathing dragon","rescuing a princess from a tower","rescuing a prince from a tower","being rescued by an unlikely hero","falling in love at first sight","sharing a dance under fireworks","watching fireworks over a city skyline","celebrating a new year countdown","making a resolution","planting a tree for Earth Day","cleaning up a beach","volunteering at an animal shelter","adopting a rescue puppy","playing fetch with a dog","napping with a cat curled up","chasing a laser pointer as a cat","herding cats literally","riding a giant snail","racing turtles","building an ant farm","studying bees in a hive","pollinating flowers as a bee","spinning a web as a spider","weaving a tapestry","knitting a sweater by the fire","sewing a quilt","sketching in a notebook on a train","painting en plein air in a field","setting up an easel on a cliff","mixing paint on a palette","sculpting clay on a pottery wheel","firing pottery in a kiln","blowing glass into a sculpture","welding a metal sculpture","building a sandcastle at the beach","digging for clams at low tide","building a snow fort","ice fishing on a frozen lake","skiing down a mountain slope","snowboarding off a jump","building an igloo","feeding penguins at a research station","tracking wolves in the wild","photographing wildlife on safari","riding in a jeep past elephants","petting a giraffe","feeding a baby elephant","swimming with dolphins","training a dolphin show","riding a jet ski","waterskiing behind a boat","parasailing over the ocean","snorkeling near a shipwreck","scuba diving into a cave","exploring an underwater city","discovering Atlantis","meeting a mermaid queen","racing chariots in an arena","fighting as a gladiator","competing in the ancient Olympics","wrestling in a competition","boxing in a championship match","sparring in a dojo","practicing martial arts under a waterfall","meditating in a Zen garden","performing a tea ceremony","writing calligraphy with a brush","folding an origami crane","flying a paper airplane","launching a model rocket","building a treehouse laboratory","inventing a time-travel machine","testing a jetpack prototype","wearing a VR headset in another world","coding a video game","designing a fashion collection","sewing a wedding dress","modeling on a catwalk","styling hair for a big event","applying stage makeup backstage","rehearsing lines for a play","taking a bow after a performance","directing a movie scene","operating a film camera","editing footage in a studio","recording a podcast","broadcasting the news live","interviewing a celebrity","signing autographs for fans","performing an encore","setting up a stage light rig","playing drums in a garage band","practicing scales on a saxophone","busking with a guitar case open","composing a symphony","whistling a tune while walking","humming while doing chores","doing the dishes while dancing","folding laundry into origami shapes","cooking breakfast in pajamas","flipping pancakes dramatically","decorating cupcakes","rolling out cookie dough","icing a wedding cake","taste-testing a new recipe","grilling at a summer barbecue","picking apples in an orchard","making a gingerbread house","wrapping presents by the fireplace","hanging string lights outside","setting up a holiday market stall","ice-carving a sculpture","building a bonfire on the beach","reading tarot cards by candlelight","casting runes for fortune telling","gazing into a crystal ball","consulting an oracle","praying at a temple altar","lighting incense at a shrine","ringing a temple bell","chanting in meditation","practicing archery at a range","fencing with foils","jousting on horseback","sparring with nunchaku","throwing shuriken at a target","sneaking through shadows as a ninja","infiltrating a fortress","picking a lock","defusing a bomb","hacking a security system","escaping handcuffs","solving a murder mystery","interrogating a suspect","chasing a getaway car","diffusing a hostage situation","piloting a helicopter rescue","parachuting from a plane","base jumping off a skyscraper","free climbing a rock face","wingsuit flying through a canyon","racing a motocross track","drifting a rally car","racing Formula 1 cars","pit-stopping during a race","waving a checkered flag","standing on a podium with a trophy","celebrating a championship win","training in a boxing gym","running a marathon","crossing a finish line exhausted","climbing Mount Everest","planting a flag at the summit","trekking through a desert","riding a camel across dunes","discovering an oasis","bartering at a bazaar market","haggling over spices","cooking street food at a night market","weaving a Persian rug","blowing glass ornaments","carving wooden toys","whittling a walking stick","building a canoe","paddling down a river","rafting through rapids","fishing with a spear","trapping fish in a woven basket","hunting with a bow in the forest","tracking animal footprints","setting up camp under the stars","riding a unicycle through a busy street","balancing plates while spinning them","performing a shadow puppet show","building a kite shaped like a dragon","launching lanterns into the night sky","floating candles down a river","carving initials into a tree","pressing flowers into a book","writing a love letter by candlelight","sealing a letter with wax","sending a message by carrier pigeon"];
+
+const TWISTS = ["at golden hour","under a blood moon","in a torrential downpour","during a total eclipse","in zero gravity","underwater","in the clouds","inside a snow globe","on top of a skyscraper","in an active volcano","inside a giant seashell","in a floating city","at the bottom of the ocean","in a candy-colored dreamscape","during a meteor shower","in a mirror dimension","as a tiny chibi version","as a towering giant","as a shadow silhouette","made of stained glass","made of living flowers","wrapped in fairy lights","surrounded by fireflies","with a glowing aura","mid-transformation","frozen in ice","on fire but unharmed","made of galaxies","with butterfly wings","riding a comet","wearing armor made of leaves","holding a lantern","with a crown of stars","in black and white except for one color","as a paper cutout","as a stained-glass window","as a living constellation","in a snowstorm","on a rooftop at dusk","beneath cherry blossoms","in an abandoned amusement park","in a neon-lit alley","atop a floating island","inside a giant clock","in a library that goes on forever","on a train through the clouds","in a garden of glass flowers","beneath a canopy of glowing mushrooms","in a city made of crystal","during a carnival at midnight","with reflections that don't match","as if seen through a kaleidoscope","with double exposure ghosting","wrapped in vines","with a school of fish swimming around them","as a puppet on strings","as a living painting stepping out of its frame","with ink dripping into reality","in slow motion mid-jump","with time frozen around them","as a silhouette against a sunset","lit only by candlelight","drenched in neon rain","surrounded by falling autumn leaves","in a blizzard of cherry blossom petals","with sparks flying","wrapped in a starry cape","as a reflection in a puddle","emerging from a portal of light","with a shadow that has a mind of its own","made entirely of smoke","as a marionette come to life","wrapped in golden chains","with wings made of light","standing in a field of bioluminescent flowers","as a living hologram","with static and glitch effects","as a sand sculpture crumbling in the wind","in an infinite mirror room","with roots growing from their feet","as a cloud given human form","wearing a mask that won't come off","with a halo of moths","as a marble statue coming to life","with jellyfish floating around them","as a shadow puppet on a lit screen","in a world where gravity runs sideways","with a second, ghostly self beside them","as if painted mid-brushstroke","with a swirl of stardust trailing behind","wrapped in a cocoon of light","as a living stained-glass saint","with lightning crackling from their fingertips","in a snow-covered ruin","under a sky with two moons","with a crown of thorns and roses","as an ukiyo-e woodblock figure stepping into color","with a tattoo that moves on its own","as a bioluminescent deep-sea creature","wrapped in newspaper clippings","with a halo made of a broken clock","as a puppet cutting their own strings","emerging from a teacup","with a storm brewing in their eyes","as a chalk drawing coming alive on pavement","with a trail of butterflies turning to petals","wearing a crown of circuitry","as a living constellation map","with hands that leave trails of light","wrapped in a blanket of fog","as a reflection that acts independently","with roots and flowers growing through cracks in their armor"];
+
+const CATEGORY_META = {
+  Anime:{color:"#ff5fae", list:ANIME},
+  Disney:{color:"#3ee6ff", list:DISNEY},
+  Pixar:{color:"#ffd166", list:PIXAR},
+  Celebrity:{color:"#9dff7a", list:CELEBRITY},
+  Original:{color:"#8b5cf6", list:ORIGINAL}
+};
+
+/* ================= STATE ================= */
+let activeCategories = new Set(Object.keys(CATEGORY_META));
+let twistEnabled = true;
+let locked = { character:false, style:false, action:false, twist:false };
+let current = { character:null, style:null, action:null, twist:null };
+
+function pool(){
+  let list = [];
+  activeCategories.forEach(cat => { list = list.concat(CATEGORY_META[cat].list.map(name => ({name, tag:cat}))); });
+  return list.length ? list : ANIME.map(name => ({name, tag:"Anime"}));
+}
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* ================= RENDER: CATEGORY CHIPS ================= */
+const categoryChipsEl = document.getElementById('categoryChips');
+Object.keys(CATEGORY_META).forEach(cat => {
+  const chip = document.createElement('div');
+  chip.className = 'chip active';
+  chip.setAttribute('role','button');
+  chip.tabIndex = 0;
+  chip.dataset.cat = cat;
+  chip.innerHTML = '<span class="dot" style="background:'+CATEGORY_META[cat].color+'"></span>'+cat+' <span style="opacity:.6">('+CATEGORY_META[cat].list.length+')</span>';
+  chip.addEventListener('click', () => toggleCategory(cat, chip));
+  chip.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggleCategory(cat, chip); } });
+  categoryChipsEl.appendChild(chip);
+});
+function toggleCategory(cat, chip){
+  if(activeCategories.has(cat)){
+    if(activeCategories.size === 1) return; // keep at least one active
+    activeCategories.delete(cat);
+    chip.classList.remove('active');
+  } else {
+    activeCategories.add(cat);
+    chip.classList.add('active');
+  }
+  updateComboNote();
+}
+
+/* ================= TWIST TOGGLE ================= */
+const twistToggleEl = document.getElementById('twistToggle');
+const slotsRow = document.getElementById('slotsRow');
+function setTwist(on){
+  twistEnabled = on;
+  twistToggleEl.classList.toggle('active', on);
+  slotsRow.classList.toggle('with-twist', on);
+  document.getElementById('twistSlot').style.display = on ? 'flex' : 'none';
+  updateComboNote();
+}
+twistToggleEl.addEventListener('click', () => setTwist(!twistEnabled));
+twistToggleEl.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); setTwist(!twistEnabled); } });
+
+/* ================= LOCKS ================= */
+document.querySelectorAll('.lock-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const slot = btn.dataset.lock;
+    locked[slot] = !locked[slot];
+    btn.classList.toggle('locked', locked[slot]);
+    btn.textContent = locked[slot] ? '🔒' : '🔓';
+  });
+});
+
+/* ================= GENERATE ================= */
+const charValueEl = document.getElementById('charValue');
+const charTagEl = document.getElementById('charTag');
+const styleValueEl = document.getElementById('styleValue');
+const actionValueEl = document.getElementById('actionValue');
+const twistValueEl = document.getElementById('twistValue');
+const promptTextEl = document.getElementById('promptText');
+
+function rollFade(el){ el.classList.remove('rolling'); void el.offsetWidth; el.classList.add('rolling'); }
+
+function generate(force){
+  if(!locked.character || force){
+    current.character = rand(pool());
+  }
+  if(!locked.style || force){
+    current.style = rand(STYLES);
+  }
+  if(!locked.action || force){
+    current.action = rand(ACTIONS);
+  }
+  if(!locked.twist || force){
+    current.twist = rand(TWISTS);
+  }
+  render();
+  sparkleBurst(document.getElementById('generateBtn'));
+}
+
+function render(){
+  if(current.character){
+    charValueEl.textContent = current.character.name;
+    charTagEl.textContent = current.character.tag;
+    charTagEl.style.background = 'rgba(255,255,255,.1)';
+    rollFade(charValueEl);
+  }
+  if(current.style){ styleValueEl.textContent = current.style; rollFade(styleValueEl); }
+  if(current.action){ actionValueEl.textContent = current.action; rollFade(actionValueEl); }
+  if(current.twist){ twistValueEl.textContent = current.twist; rollFade(twistValueEl); }
+  composePrompt();
+}
+
+function composePrompt(){
+  if(!current.character || !current.style || !current.action){
+    promptTextEl.textContent = "Your spark will appear here — a full sentence ready to paste into your sketchbook or prompt box.";
+    return;
+  }
+  let sentence = "Draw " + current.character.name + ", reimagined through " + current.style + ", " + current.action;
+  if(twistEnabled && current.twist){ sentence += ", " + current.twist; }
+  sentence += ".";
+  promptTextEl.textContent = sentence;
+}
+
+document.getElementById('generateBtn').addEventListener('click', () => generate(false));
+document.getElementById('rerollAllBtn').addEventListener('click', () => generate(true));
+
+/* ================= COPY ================= */
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const text = promptTextEl.textContent;
+  if(!text || text.indexOf('will appear here') !== -1) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const original = btn.innerHTML;
+    btn.innerHTML = '✅ Copied';
+    setTimeout(() => { btn.innerHTML = original; }, 1500);
+  }).catch(() => {});
+});
+
+/* ================= FAVORITES ================= */
+const FAV_KEY = 'spark_favorites_v1';
+function getFavorites(){ try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch(e){ return []; } }
+function setFavorites(list){ localStorage.setItem(FAV_KEY, JSON.stringify(list)); }
+
+document.getElementById('saveFavBtn').addEventListener('click', () => {
+  if(!current.character || !current.style || !current.action) return;
+  const favs = getFavorites();
+  favs.unshift({ id: Date.now(), text: promptTextEl.textContent, data: JSON.parse(JSON.stringify(current)), twistEnabled });
+  setFavorites(favs.slice(0, 60));
+  renderFavorites();
+});
+
+function renderFavorites(){
+  const grid = document.getElementById('favGrid');
+  const favs = getFavorites();
+  grid.innerHTML = '';
+  if(!favs.length){
+    grid.innerHTML = '<div class="fav-empty">No saved sparks yet — generate one above and hit ⭐ Save this spark.</div>';
+    return;
+  }
+  favs.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'fav-card';
+    card.innerHTML = '<div class="fav-text">'+escapeHtml(f.text)+'</div><button class="fav-load">↺ Load into generator</button><button class="fav-remove" aria-label="Remove favorite">✕</button>';
+    card.querySelector('.fav-remove').addEventListener('click', () => {
+      setFavorites(getFavorites().filter(x => x.id !== f.id));
+      renderFavorites();
+    });
+    card.querySelector('.fav-load').addEventListener('click', () => {
+      current = f.data;
+      setTwist(f.twistEnabled !== false);
+      render();
+      document.getElementById('generator').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+    grid.appendChild(card);
+  });
+}
+function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+/* ================= SPARKLE BURST ================= */
+function sparkleBurst(anchorEl){
+  const rect = anchorEl.getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  const wrap = document.createElement('div');
+  wrap.className = 'burst';
+  wrap.style.left = cx + 'px';
+  wrap.style.top = cy + 'px';
+  const colors = ['#ff5fae','#8b5cf6','#3ee6ff','#ffd166','#9dff7a'];
+  for(let i=0;i<22;i++){
+    const s = document.createElement('span');
+    const angle = Math.random()*Math.PI*2;
+    const dist = 60 + Math.random()*90;
+    s.style.setProperty('--dx', Math.cos(angle)*dist + 'px');
+    s.style.setProperty('--dy', Math.sin(angle)*dist + 'px');
+    s.style.background = colors[i % colors.length];
+    s.style.animationDelay = (Math.random()*0.08) + 's';
+    wrap.appendChild(s);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 1000);
+}
+
+/* ================= BACKGROUND TWINKLES ================= */
+const sparkfield = document.getElementById('sparkfield');
+for(let i=0;i<60;i++){
+  const t = document.createElement('div');
+  t.className = 'twinkle';
+  t.style.left = Math.random()*100 + 'vw';
+  t.style.top = Math.random()*100 + 'vh';
+  t.style.animationDelay = (Math.random()*3.5) + 's';
+  t.style.animationDuration = (2.5 + Math.random()*3) + 's';
+  sparkfield.appendChild(t);
+}
+
+/* ================= STATS ================= */
+function countUp(el, target){
+  const dur = 900; const start = performance.now();
+  function step(now){
+    const p = Math.min(1, (now-start)/dur);
+    el.textContent = Math.floor(p*target).toLocaleString();
+    if(p<1) requestAnimationFrame(step); else el.textContent = target.toLocaleString();
+  }
+  requestAnimationFrame(step);
+}
+function updateComboNote(){
+  const charCount = pool().length;
+  const twistFactor = twistEnabled ? TWISTS.length : 1;
+  const combos = charCount * STYLES.length * ACTIONS.length * twistFactor;
+  document.getElementById('comboNote').textContent = charCount.toLocaleString() + ' characters × ' + STYLES.length.toLocaleString() + ' styles × ' + ACTIONS.length.toLocaleString() + ' scenarios' + (twistEnabled ? ' × ' + TWISTS.length + ' twists' : '') + ' = ' + combos.toLocaleString() + ' possible sparks in your current pool.';
+}
+
+/* ================= VAULT ================= */
+document.querySelectorAll('.vault-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.vault-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.vault-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('vault-' + tab.dataset.vault).classList.add('active');
+  });
+});
+function fillVault(elId, items){
+  const el = document.getElementById(elId);
+  const frag = document.createDocumentFragment();
+  items.forEach(name => {
+    const span = document.createElement('span');
+    span.textContent = name;
+    frag.appendChild(span);
+  });
+  el.appendChild(frag);
+}
+fillVault('vaultChars', pool().map(c => c.name));
+fillVault('vaultStyles', STYLES);
+fillVault('vaultActions', ACTIONS);
+fillVault('vaultTwists', TWISTS);
+
+/* ================= FAQ ================= */
+function toggleFaq(btn){
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(el => {
+    el.classList.remove('open');
+    el.querySelector('.faq-q').setAttribute('aria-expanded','false');
+  });
+  if(!isOpen){ item.classList.add('open'); btn.setAttribute('aria-expanded','true'); }
+}
+
+/* ================= INIT ================= */
+document.getElementById('year').textContent = new Date().getFullYear();
+countUp(document.getElementById('statChars'), CHARACTERS_COUNT());
+countUp(document.getElementById('statStyles'), STYLES.length);
+countUp(document.getElementById('statActions'), ACTIONS.length);
+countUp(document.getElementById('statCombos'), CHARACTERS_COUNT()*STYLES.length*ACTIONS.length);
+function CHARACTERS_COUNT(){ return ANIME.length+DISNEY.length+PIXAR.length+CELEBRITY.length+ORIGINAL.length; }
+setTwist(true);
+updateComboNote();
+renderFavorites();
+generate(true);
+</script>
+</body>
+</html>
